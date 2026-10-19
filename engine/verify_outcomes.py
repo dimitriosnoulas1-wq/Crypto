@@ -36,7 +36,7 @@ def main():
          "o.exit_price, o.fwd_ret, o.up, o.resolved_at FROM predictions p JOIN outcomes o ON o.prediction_id = p.id")
     r = pd.read_sql_query(q, db)
     if a.asof:
-        r = r[pd.to_datetime(r.asof) == pd.Timestamp(a.asof, tz="UTC")]
+        r = r[pd.to_datetime(r["asof"]) == pd.Timestamp(a.asof, tz="UTC")]
     dup = db.execute("SELECT prediction_id, COUNT(*) FROM outcomes GROUP BY prediction_id HAVING COUNT(*) > 1").fetchall()
     crypto = {d["instId"] for d in okx.get("/api/v5/public/instruments", {"instType": "SWAP"})
               if d.get("instCategory") == "1" and d["instId"].endswith("-USDT-SWAP")}
@@ -70,7 +70,7 @@ def main():
             checked += 1
     out = {"resolved_checked": checked, "symbols": int(r.symbol.nunique()), "duplicate_outcomes": dup,
            "problems": len(problems), "by_horizon": r.groupby("horizon_days").size().to_dict(),
-           "asof_bars": sorted(r.asof.unique().tolist())}
+           "asof_bars": sorted(r["asof"].unique().tolist())}
     print(json.dumps(out, indent=1, default=str))
     for p in problems[:50]:
         print("PROBLEM", p)

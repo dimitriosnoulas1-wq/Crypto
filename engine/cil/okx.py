@@ -134,10 +134,14 @@ def _accumulate(path: Path, new: pd.DataFrame) -> pd.DataFrame:
     return new
 
 
-def fetch_panel(top_n: int, cache: Path, log: list) -> tuple[pd.DataFrame, dict, int]:
+def fetch_panel(top_n: int, cache: Path, log: list, extra_symbols=()) -> tuple[pd.DataFrame, dict, int]:
+    """`extra_symbols`: coins outside today's top-N that still need data (e.g. to score pending
+    predictions). They are fetched but listed apart in df.attrs["universe"]."""
     t0 = time.time()
     now_ms = server_time_ms()
     ids, last = universe(top_n)
+    top = [i.split("-")[0] for i in ids]
+    ids += [f"{s}-USDT-SWAP" for s in extra_symbols if f"{s}-USDT-SWAP" not in ids]
     cache.mkdir(exist_ok=True)
     frames = []
     for inst in ids:
@@ -184,6 +188,7 @@ def fetch_panel(top_n: int, cache: Path, log: list) -> tuple[pd.DataFrame, dict,
     if not frames:
         raise OkxError("no instrument could be fetched")
     df = pd.concat(frames).set_index(["date", "symbol"]).sort_index()
+    df.attrs["universe"] = top
     prices = {i.split("-")[0]: p for i, p in last.items() if i in ids}
     log.append(f"fetch_seconds {time.time() - t0:.1f} instruments {len(frames)}/{len(ids)}")
     return df, prices, now_ms

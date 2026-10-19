@@ -46,10 +46,10 @@ CONF = 0.55                  # paper position threshold
 
 
 # ---------------------------------------------------------------- data
-def fetch_live(top_n: int, log: list, venue: str = "okx") -> tuple[pd.DataFrame, dict, int]:
+def fetch_live(top_n: int, log: list, venue: str = "okx", extra=()) -> tuple[pd.DataFrame, dict, int]:
     if venue == "okx":  # Binance/Bybit geo-block the cloud environment
         from cil import okx
-        return okx.fetch_panel(top_n, CACHE, log)
+        return okx.fetch_panel(top_n, CACHE, log, extra)
     from cil import binance as bn
     t0 = time.time()
     now_ms = bn.server_time_ms()
@@ -243,7 +243,13 @@ def write_markdown(rep: dict):
     lines += ["", "## Health", ""]
     for k, v in rep["health"].items():
         lines.append(f"- **{k}**: {v}")
-    lines += ["", "## Realized results (resolved predictions only)", "",
+    min_bars = min((m["bars"] for m in rep["models"].values()), default=0)
+    lines += ["", "## Realized results (resolved predictions only)", ""]
+    if rep["models"] and min_bars < 24:
+        lines += [f"**Not interpretable yet: only {min_bars} scored hour(s).** Coins move together within an hour, "
+                  "so N coins in one hour is close to one observation; the confidence intervals below assume "
+                  "independence and are far too narrow at this stage.", ""]
+    lines += [
               "Brier skill vs base rate = improvement over the naive base-rate model on the same rows "
               "(0 = no better, negative = worse). Paper P&L uses the live price at prediction time and 5 bps/side fees.", "",
               "| model / horizon / subset | resolved | bars | calls | hit rate | 95% CI | up rate | mean p | "
@@ -274,9 +280,12 @@ def main():
         LIVE = LIVE / "offline_test"
     LIVE.mkdir(parents=True, exist_ok=True)
     log: list[str] = []
-    df, prices, now_ms = offline(a.offline, log) if a.offline else fetch_live(a.top, log, a.venue)
     ledger = Ledger(Path(a.ledger) if a.ledger else
                     LIVE / ("ledger.sqlite" if a.offline else f"ledger_{a.venue}.sqlite"))
+    # Coins with predictions still waiting for an outcome must be fetched even if they left the top-N.
+    pending_syms = sorted({r[2] for r in ledger.unresolved()})
+    df, prices, now_ms = offline(a.offline, log) if a.offline else fetch_live(a.top, log, a.venue, pending_syms)
+    universe_syms = set(df.attrs.get("universe", df.index.get_level_values("symbol").unique()))
     health_venue = "offline" if a.offline else a.venue
 
     last_bar = df.index.get_level_values("date").max()
@@ -287,6 +296,8 @@ def main():
     health = {
         "venue": health_venue,
         "symbols": int(df.index.get_level_values("symbol").nunique()),
+        "universe_size": len(universe_syms),
+        "fetched_only_for_scoring": sorted(set(df.index.get_level_values("symbol").unique()) - universe_syms),
         "last_closed_bar": str(last_bar),
         "minutes_since_bar_close_at_fetch": round((now_ms / 1000 - bar_close.timestamp()) / 60, 1),
         "stale_symbols": stale,
@@ -316,6 +327,7 @@ def main():
             health[f"train_rows_h{h}"] = n_train
             health[f"orthosys_hist_hit_h{h}"] = round(ortho_hit, 4)
             for model, ser in preds.items():
+                ser = ser[ser.index.get_level_values("symbol").isin(universe_syms)]  # new predictions: top-N only
                 health[f"p_spread_{model}_h{h}"] = round(float(ser.std()), 4) if len(ser) > 1 else 0.0
                 for (d, sym), p in ser.items():
                     row = feats.loc[(d, sym)]
