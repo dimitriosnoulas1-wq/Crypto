@@ -33,6 +33,7 @@ from cil.features import build_features
 from cil.labels import build_labels
 from cil.ledger import Ledger
 from cil.metrics import brier, ece, wilson
+from cil.council import AnalogAgent, DerivativesAgent, convene, hedge_weights, risk_veto
 from cil.models import GBM, BaseRate, ConditionalFrequency, Logistic, RecentBaseRate
 from cil.orthosys import DEFAULT as ORTHO_PARAMS, orthosys_panel
 
@@ -117,7 +118,7 @@ def fresh_prices(venue: str, fallback: dict) -> tuple[dict, int]:
 # ---------------------------------------------------------------- models
 def models_for(cols):
     return [BaseRate(), RecentBaseRate(7), ConditionalFrequency("momentum_24", "ret_14", [0.0]), Logistic(cols),
-            GBM(cols, calibrate=True)]
+            GBM(cols, calibrate=True), AnalogAgent(100), DerivativesAgent()]
 
 
 def predict(df: pd.DataFrame, feats: pd.DataFrame, last_bar, h: int):
@@ -140,6 +141,11 @@ def predict(df: pd.DataFrame, feats: pd.DataFrame, last_bar, h: int):
     hit = float((np.sign(hist.fwd_ret) == hist.position).mean()) if len(hist) else 0.5
     pos = o.loc[o.index.get_level_values("date") == last_bar, "position"]
     out["orthosys"] = (0.5 + pos * (hit - 0.5)).astype(float)
+    if USE_FOUNDATION:
+        from cil import foundation
+        ok, why = foundation.available()
+        if ok:
+            out["chronos_bolt"] = pd.Series(foundation.ChronosAgent(df, h).predict_proba(today), index=today.index)
     return out, len(train), hit
 
 
@@ -161,6 +167,7 @@ def resolve_pending(ledger: Ledger, closes: pd.Series, bar: pd.Timedelta) -> int
 
 # ---------------------------------------------------------------- monitor
 START_CAPITAL = 1000.0
+USE_FOUNDATION = False  # set by --foundation; needs Hugging Face access (blocked today)
 
 
 def wallets(tr: pd.DataFrame) -> dict:
@@ -318,10 +325,14 @@ def main():
     ap.add_argument("--offline", metavar="ASOF", help="test on archived daily data up to this date")
     ap.add_argument("--venue", choices=["okx", "binance"], default="okx")
     ap.add_argument("--ledger", default=None)
+    ap.add_argument("--foundation", action="store_true", help="add Chronos-Bolt member (needs Hugging Face)")
     a = ap.parse_args()
-    global LIVE
+    global LIVE, USE_FOUNDATION
+    USE_FOUNDATION = a.foundation
     if a.offline:  # tests must never write into the live monitor/history
         LIVE = LIVE / "offline_test"
+    elif a.ledger:  # a custom ledger (dry runs) gets its own monitor/history too
+        LIVE = LIVE / "custom_ledger"
     LIVE.mkdir(parents=True, exist_ok=True)
     log: list[str] = []
     ledger = Ledger(Path(a.ledger) if a.ledger else
@@ -359,6 +370,24 @@ def main():
         all_preds = {}
         for h in HORIZONS:
             all_preds[h] = predict(df, feats, last_bar, h)
+        # The council: weights from each member's realised record in this ledger, abstention
+        # when trusted members disagree, and a risk veto on extreme/missing-data coins.
+        council_meta = {}
+        veto = risk_veto(feats[feats.index.get_level_values("date") == last_bar])
+        for h in HORIZONS:
+            preds = all_preds[h][0]
+            scored = pd.read_sql_query(
+                "SELECT p.asof, p.model, p.p_up, o.up FROM predictions p JOIN outcomes o "
+                "ON o.prediction_id = p.id WHERE p.horizon_days = ?", ledger.db, params=(h,))
+            weights, member_ll = hedge_weights(scored, list(preds))
+            preds["council"], meta_list = convene(preds, weights, veto)
+            council_meta[h] = dict(zip(preds["council"].index, meta_list))
+            in_univ = [k for k in council_meta[h] if k[1] in universe_syms]
+            health[f"council_weights_h{h}"] = {m: round(w, 3) for m, w in weights.items()}
+            health[f"council_member_logloss_h{h}"] = {m: round(v, 4) for m, v in member_ll.items()}
+            health[f"council_calls_h{h}"] = sum(1 for k in in_univ if not council_meta[h][k]["abstain"])
+            health[f"council_abstain_h{h}"] = pd.Series(
+                [council_meta[h][k]["abstain"] or "spoke" for k in in_univ]).value_counts().to_dict()
         # Live price fetched immediately before writing, with its exchange timestamp, so the
         # executable entry price and the latency are measured at the moment of prediction.
         live, price_ts_ms = fresh_prices(a.venue, prices) if not a.offline else (prices, now_ms)
@@ -382,6 +411,7 @@ def main():
                                         # Too late if more than a quarter of the horizon has already elapsed.
                                         "late": bool(latency_min > 0.25 * h * BAR.total_seconds() / 60),
                                         "bar": str(BAR),
+                                        **({"council": council_meta[h].get((d, sym))} if model == "council" else {}),
                                         "inputs": {k: round(float(row[k]), 5) for k in
                                                    ("ret_1", "ret_14", "rsi_14", "qvol_z", "funding_z")
                                                    if k in row and pd.notna(row[k])}})
