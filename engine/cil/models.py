@@ -82,7 +82,7 @@ class GBM:
                               colsample_bytree=0.6, reg_lambda=5.0,
                               random_state=self.seed, verbose=-1)
 
-    def fit(self, X, y, dates=None, horizon=1):
+    def fit(self, X, y, dates=None, horizon=1, bar=pd.Timedelta(days=1)):
         X = X[self.columns]
         y = np.asarray(y)
         if not self.calibrate or dates is None:
@@ -92,7 +92,7 @@ class GBM:
         dates = pd.DatetimeIndex(dates).as_unit("ns")
         cut = pd.Timestamp(int(np.quantile(dates.asi8, 0.8)), unit="ns", tz="UTC")
         # Purge: fitting rows whose label could reach into the calibration slice are dropped.
-        fit_mask = np.asarray(dates < cut - pd.Timedelta(days=horizon))
+        fit_mask = np.asarray(dates < cut - horizon * bar)
         cal_mask = np.asarray(dates >= cut)
         self.model = self._new().fit(X[fit_mask], y[fit_mask])
         raw = self.model.predict_proba(X[cal_mask])[:, 1]

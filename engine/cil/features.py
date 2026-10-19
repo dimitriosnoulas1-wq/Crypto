@@ -53,6 +53,16 @@ def _symbol_features(g: pd.DataFrame) -> pd.DataFrame:
     f["funding_7d"] = fund.rolling(7, min_periods=5).sum()
     f["funding_z"] = robust_z(fund, 60)
     f["drawdown_90"] = c / c.rolling(90, min_periods=30).max() - 1
+    # Optional live-only inputs (Binance klines / OI history); absent in the daily archive.
+    if "taker_buy_quote" in g:
+        tr = g["taker_buy_quote"] / g["quote_volume"].replace(0, np.nan)
+        f["taker_ratio"] = tr
+        f["taker_ratio_24"] = tr.rolling(24, min_periods=12).mean()
+    if "oi_value" in g:
+        oi = np.log(g["oi_value"].replace(0, np.nan))
+        f["oi_chg_1"] = oi.diff()
+        f["oi_chg_24"] = oi.diff(24)
+        f["oi_chg_z"] = robust_z(oi.diff(), 72)
     return f
 
 
