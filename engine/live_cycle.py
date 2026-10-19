@@ -192,7 +192,7 @@ def monitor(tr: pd.DataFrame, pending: pd.DataFrame, health: dict) -> dict:
             rel = pd.DataFrame({"bin": bins.astype(str), "p": p, "y": y}).groupby("bin").agg(
                 n=("y", "size"), mean_p=("p", "mean"), up_rate=("y", "mean")).round(4)
             rep["models"][f"{model}|h{h}|{subset}"] = {
-                "resolved": len(gg), "bars": int(gg.asof.nunique()), "coins": int(gg.symbol.nunique()),
+                "resolved": len(gg), "bars": int(gg["asof"].nunique()), "coins": int(gg.symbol.nunique()),
                 "directional_calls": n, "hit_rate": k / n if n else None, "hit_ci95": wilson(k, n),
                 "mean_p": float(p.mean()), "up_rate": float(y.mean()),
                 "brier": brier(p, y), "brier_base_rate_model": brier(pb, y),
@@ -269,11 +269,14 @@ def main():
     ap.add_argument("--venue", choices=["okx", "binance"], default="okx")
     ap.add_argument("--ledger", default=None)
     a = ap.parse_args()
+    global LIVE
+    if a.offline:  # tests must never write into the live monitor/history
+        LIVE = LIVE / "offline_test"
     LIVE.mkdir(parents=True, exist_ok=True)
     log: list[str] = []
     df, prices, now_ms = offline(a.offline, log) if a.offline else fetch_live(a.top, log, a.venue)
     ledger = Ledger(Path(a.ledger) if a.ledger else
-                    LIVE / ("ledger_offline.sqlite" if a.offline else f"ledger_{a.venue}.sqlite"))
+                    LIVE / ("ledger.sqlite" if a.offline else f"ledger_{a.venue}.sqlite"))
     health_venue = "offline" if a.offline else a.venue
 
     last_bar = df.index.get_level_values("date").max()
@@ -345,7 +348,7 @@ def main():
         tr["live_price"] = [m.get("live_price") or r for m, r in zip(meta, tr.ref_price_entry)]
         # Rows written before latency was logged: derive it from created_at - bar close. For the first
         # cycle created_at was the run start, so this is a lower bound (true latency ~5 min larger).
-        derived = ((pd.to_datetime(tr.created_at) - (pd.to_datetime(tr.asof) + BAR)).dt.total_seconds() / 60)
+        derived = ((pd.to_datetime(tr["created_at"]) - (pd.to_datetime(tr["asof"]) + BAR)).dt.total_seconds() / 60)
         lat = [m.get("latency_min", d) for m, d in zip(meta, derived)]
         tr["late"] = [la > 0.25 * h * BAR.total_seconds() / 60 for la, h in zip(lat, tr.horizon_days)]
     rep = monitor(tr, pending, health)

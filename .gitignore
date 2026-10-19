@@ -4,3 +4,4 @@ __pycache__/
 .venv/
 .env
 data_cache/
+results/live/offline_test/

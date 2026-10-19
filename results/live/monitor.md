@@ -1,37 +1,59 @@
-# Live monitor (2026-10-19T16:38:28.133965+00:00)
+# Live monitor (2026-10-19T16:51:02.123607+00:00)
 
 ## Alerts
 
-- LATE: predicted 33.3 min after bar close (prices moved meanwhile)
+- LATE: predictions written 656211.0 min after bar close (h1 predictions flagged late above 15 min, h4 above 60 min)
 
 ## Health
 
-- **venue**: okx
-- **symbols**: 60
-- **last_closed_bar**: 2026-10-19 15:00:00+00:00
-- **minutes_since_bar_close**: 33.3
+- **venue**: offline
+- **symbols**: 13
+- **last_closed_bar**: 2025-07-20 00:00:00+00:00
+- **minutes_since_bar_close_at_fetch**: 5.0
 - **stale_symbols**: []
-- **fetch_log**: ['fetch_seconds 301.6 instruments 60/60']
-- **feature_nan_share_latest_bar**: 0.026
-- **train_rows_h1**: 86291
-- **orthosys_hist_hit_h1**: 0.5282
+- **fetch_log**: ['offline mode: daily archive']
+- **feature_nan_share_latest_bar**: 0.0
+- **prediction_latency_min**: 656211.0
+- **price_snapshot_age_s**: 39372361.7
+- **train_rows_h1**: 14561
+- **orthosys_hist_hit_h1**: 0.5593
 - **p_spread_base_rate_h1**: 0.0
-- **p_spread_momentum_24_h1**: 0.0078
-- **p_spread_logistic_h1**: 0.0233
-- **p_spread_lgbm_calibrated_h1**: 0.0097
-- **p_spread_orthosys_h1**: 0.0036
-- **train_rows_h4**: 86111
-- **orthosys_hist_hit_h4**: 0.5207
+- **p_spread_recent_base_rate_7d_h1**: 0.0
+- **p_spread_momentum_24_h1**: 0.0
+- **p_spread_logistic_h1**: 0.0177
+- **p_spread_lgbm_calibrated_h1**: 0.0149
+- **p_spread_orthosys_h1**: 0.0164
+- **train_rows_h4**: 14510
+- **orthosys_hist_hit_h4**: 0.5719
 - **p_spread_base_rate_h4**: 0.0
-- **p_spread_momentum_24_h4**: 0.0009
-- **p_spread_logistic_h4**: 0.0356
-- **p_spread_lgbm_calibrated_h4**: 0.0132
-- **p_spread_orthosys_h4**: 0.0027
+- **p_spread_recent_base_rate_7d_h4**: 0.0
+- **p_spread_momentum_24_h4**: 0.0
+- **p_spread_logistic_h4**: 0.0467
+- **p_spread_lgbm_calibrated_h4**: 0.0086
+- **p_spread_orthosys_h4**: 0.0199
+- **predictions_written**: 156
 - **resolved_this_cycle**: 0
 - **ledger_chain_valid**: True
-- **ledger_rows**: 600
+- **ledger_rows**: 156
 
-## Models (resolved predictions only)
+## Realized results (resolved predictions only)
 
-| model | resolved | calls | hit rate | 95% CI | Brier skill | ECE | paper trades | mean pnl bps |
-|---|---|---|---|---|---|---|---|---|
+Brier skill vs base rate = improvement over the naive base-rate model on the same rows (0 = no better, negative = worse). Paper P&L uses the live price at prediction time and 5 bps/side fees.
+
+| model / horizon / subset | resolved | bars | calls | hit rate | 95% CI | up rate | mean p | Brier skill vs base | ECE | coverage | mean paper pnl bps |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+
+## Unverified (pending, not scored)
+
+- base_rate|h1: 13
+- base_rate|h4: 13
+- lgbm_calibrated|h1: 13
+- lgbm_calibrated|h4: 13
+- logistic|h1: 13
+- logistic|h4: 13
+- momentum_24|h1: 13
+- momentum_24|h4: 13
+- orthosys|h1: 13
+- orthosys|h4: 13
+- recent_base_rate_7d|h1: 13
+- recent_base_rate_7d|h4: 13
