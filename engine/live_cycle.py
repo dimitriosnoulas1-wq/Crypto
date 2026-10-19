@@ -33,7 +33,7 @@ from cil.features import build_features
 from cil.labels import build_labels
 from cil.ledger import Ledger
 from cil.metrics import brier, ece, wilson
-from cil.models import GBM, BaseRate, ConditionalFrequency, Logistic
+from cil.models import GBM, BaseRate, ConditionalFrequency, Logistic, RecentBaseRate
 from cil.orthosys import DEFAULT as ORTHO_PARAMS, orthosys_panel
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -104,9 +104,19 @@ def offline(asof: str, log: list):
     return df, prices, now_ms
 
 
+def fresh_prices(venue: str, fallback: dict) -> tuple[dict, int]:
+    if venue == "okx":
+        from cil import okx
+        t = okx.get("/api/v5/market/tickers", {"instType": "SWAP"})
+        px = {d["instId"].split("-")[0]: float(d["last"]) for d in t if d["instId"].endswith("-USDT-SWAP")}
+        return px, max(int(d["ts"]) for d in t)
+    from cil import binance as bn
+    return bn.last_prices(), bn.server_time_ms()
+
+
 # ---------------------------------------------------------------- models
 def models_for(cols):
-    return [BaseRate(), ConditionalFrequency("momentum_24", "ret_14", [0.0]), Logistic(cols),
+    return [BaseRate(), RecentBaseRate(7), ConditionalFrequency("momentum_24", "ret_14", [0.0]), Logistic(cols),
             GBM(cols, calibrate=True)]
 
 
@@ -133,39 +143,76 @@ def predict(df: pd.DataFrame, feats: pd.DataFrame, last_bar, h: int):
     return out, len(train), hit
 
 
+def resolve_pending(ledger: Ledger, closes: pd.Series, bar: pd.Timedelta) -> int:
+    """Score each unresolved prediction once its horizon bar has CLOSED.
+
+    A prediction made from bar `asof` (open time) uses close(asof) as reference; its outcome for
+    horizon h is close(asof + h*bar), the close of the h-th following bar. `closes` must contain
+    closed bars only. Already scored predictions are never rescored.
+    """
+    n = 0
+    for pid, asof, sym, h, ref in ledger.unresolved():
+        end = pd.Timestamp(asof) + h * bar
+        if (end, sym) in closes.index:
+            exit_px = float(closes.loc[(end, sym)])
+            n += ledger.resolve(pid, datetime.now(timezone.utc).isoformat(), exit_px, float(np.log(exit_px / ref)))
+    return n
+
+
 # ---------------------------------------------------------------- monitor
-def monitor(tr: pd.DataFrame, health: dict) -> dict:
-    """tr: resolved predictions with p_up, up, ref_price_entry, live_price, exit_px."""
-    rep = {"generated_at": datetime.now(timezone.utc).isoformat(), "health": health, "models": {}}
+def monitor(tr: pd.DataFrame, pending: pd.DataFrame, health: dict) -> dict:
+    """Realized results only. `tr`: resolved predictions; `pending`: not yet matured (never scored).
+
+    Per (model, horizon): sample counts, directional hit rate with Wilson CI, Brier score and Brier
+    skill versus (a) the naive base-rate model on exactly the same (bar, coin, horizon) rows and
+    (b) a constant 0.5, ECE plus reliability bins, coverage of paper positions, and
+    paper P&L measured from the live price at prediction time (executable) after fees.
+    On-time and late predictions are reported separately.
+    """
+    rep = {"generated_at": datetime.now(timezone.utc).isoformat(), "health": health, "models": {},
+           "pending": {f"{m}|h{h}": int(n) for (m, h), n in
+                       pending.groupby(["model_name", "horizon_days"]).size().items()} if len(pending) else {}}
     if tr.empty:
         return rep
+    key = ["asof", "symbol", "horizon_days"]
+    base = tr[tr.model_name == "base_rate"].set_index(key)["p_up"].rename("p_base")
+    tr = tr.join(base, on=key)
     for (model, h), g in tr.groupby(["model_name", "horizon_days"]):
-        y, p = g.up.to_numpy(), g.p_up.to_numpy()
-        base = np.full(len(y), 0.5)
-        calls = p != 0.5
-        k = int(((p[calls] >= 0.5) == y[calls]).sum())
-        n = int(calls.sum())
-        side = np.where(p >= CONF, 1, np.where(p <= 1 - CONF, -1, 0))
-        # Executable return: from the live price when we predicted, not the bar close.
-        exe = np.log(g.exit_px.to_numpy() / g.live_price.to_numpy())
-        pnl = side * np.expm1(exe) - (side != 0) * 2 * FEE_BPS / 1e4
-        lo, hi = wilson(k, n)
-        rep["models"][f"{model}|h{h}"] = {
-            "resolved": len(g), "directional_calls": n, "hit_rate": k / n if n else None, "hit_ci95": (lo, hi),
-            "mean_p": float(p.mean()), "up_rate": float(y.mean()),
-            "brier": brier(p, y), "brier_skill_vs_0.5": 1 - brier(p, y) / brier(base, y), "ece": ece(p, y),
-            "paper_trades": int((side != 0).sum()), "paper_pnl_sum": float(pnl.sum()),
-            "paper_pnl_mean_bps": float(pnl[side != 0].mean() * 1e4) if (side != 0).any() else None,
-            "latency_cost_bps": float(np.mean(np.log(g.live_price / g.ref_price_entry)) * 1e4),
-        }
+        for subset, gg in (("all", g), ("on_time", g[~g.late]), ("late", g[g.late])):
+            if gg.empty:
+                continue
+            y, p = gg.up.to_numpy(), gg.p_up.to_numpy()
+            pb = gg.p_base.fillna(0.5).to_numpy()
+            calls = np.abs(p - 0.5) > 1e-9
+            k, n = int(((p[calls] >= 0.5) == y[calls]).sum()), int(calls.sum())
+            side = np.where(p >= CONF, 1, np.where(p <= 1 - CONF, -1, 0))
+            exe = np.log(gg.exit_px.to_numpy() / gg.live_price.to_numpy())
+            pnl = side * np.expm1(exe) - (side != 0) * 2 * FEE_BPS / 1e4
+            bins = pd.cut(pd.Series(p), [0, 0.4, 0.45, 0.5, 0.55, 0.6, 1.0], include_lowest=True)
+            rel = pd.DataFrame({"bin": bins.astype(str), "p": p, "y": y}).groupby("bin").agg(
+                n=("y", "size"), mean_p=("p", "mean"), up_rate=("y", "mean")).round(4)
+            rep["models"][f"{model}|h{h}|{subset}"] = {
+                "resolved": len(gg), "bars": int(gg.asof.nunique()), "coins": int(gg.symbol.nunique()),
+                "directional_calls": n, "hit_rate": k / n if n else None, "hit_ci95": wilson(k, n),
+                "mean_p": float(p.mean()), "up_rate": float(y.mean()),
+                "brier": brier(p, y), "brier_base_rate_model": brier(pb, y),
+                "brier_skill_vs_base_rate": 1 - brier(p, y) / brier(pb, y) if brier(pb, y) > 0 else None,
+                "brier_skill_vs_0.5": 1 - brier(p, y) / 0.25,
+                "ece": ece(p, y), "reliability": rel.reset_index().to_dict("records"),
+                "coverage_paper_positions": float((side != 0).mean()),
+                "paper_trades": int((side != 0).sum()),
+                "paper_pnl_mean_bps": float(pnl[side != 0].mean() * 1e4) if (side != 0).any() else None,
+                "close_vs_live_entry_bps": float(np.mean(np.log(gg.live_price / gg.ref_price_entry)) * 1e4),
+            }
     return rep
 
 
 def alerts(rep: dict) -> list[str]:
     """Things that break in live use and that a backtest cannot show."""
     h, out = rep["health"], []
-    if h.get("minutes_since_bar_close", 0) > 20:
-        out.append(f"LATE: predicted {h['minutes_since_bar_close']} min after bar close (prices moved meanwhile)")
+    if h.get("prediction_latency_min", 0) > 15:
+        out.append(f"LATE: predictions written {h['prediction_latency_min']} min after bar close "
+                   f"(h1 predictions flagged late above 15 min, h4 above 60 min)")
     if h.get("stale_symbols"):
         out.append(f"STALE DATA: {len(h['stale_symbols'])} symbols missing the latest bar: {h['stale_symbols'][:10]}")
     if any(x.startswith("fetch_failed") for x in h.get("fetch_log", [])):
@@ -178,12 +225,15 @@ def alerts(rep: dict) -> list[str]:
     if not h.get("ledger_chain_valid", True):
         out.append("LEDGER TAMPERED OR CORRUPTED")
     for name, m in rep["models"].items():
+        if not name.endswith("|all"):
+            continue
         if m["resolved"] >= 300 and m["ece"] > 0.08:
             out.append(f"MISCALIBRATED: {name} says {m['mean_p']:.2f} on average, reality {m['up_rate']:.2f} (ECE {m['ece']:.3f})")
         if m["resolved"] >= 300 and m["hit_ci95"][1] < 0.5:
             out.append(f"WORSE THAN COIN FLIP: {name} hit-rate CI upper bound {m['hit_ci95'][1]:.3f}")
-        if m["resolved"] >= 100 and abs(m["latency_cost_bps"]) > 15:
-            out.append(f"LATENCY SLIPPAGE: {name} live price differs from bar close by {m['latency_cost_bps']:+.1f} bps on average")
+        if m["resolved"] >= 100 and abs(m["close_vs_live_entry_bps"]) > 15:
+            out.append(f"LATENCY SLIPPAGE: {name} live price differs from bar close by "
+                       f"{m['close_vs_live_entry_bps']:+.1f} bps on average")
     return out
 
 
@@ -193,15 +243,21 @@ def write_markdown(rep: dict):
     lines += ["", "## Health", ""]
     for k, v in rep["health"].items():
         lines.append(f"- **{k}**: {v}")
-    lines += ["", "## Models (resolved predictions only)", "",
-              "| model | resolved | calls | hit rate | 95% CI | Brier skill | ECE | paper trades | mean pnl bps |",
-              "|---|---|---|---|---|---|---|---|---|"]
+    lines += ["", "## Realized results (resolved predictions only)", "",
+              "Brier skill vs base rate = improvement over the naive base-rate model on the same rows "
+              "(0 = no better, negative = worse). Paper P&L uses the live price at prediction time and 5 bps/side fees.", "",
+              "| model / horizon / subset | resolved | bars | calls | hit rate | 95% CI | up rate | mean p | "
+              "Brier skill vs base | ECE | coverage | mean paper pnl bps |",
+              "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for name, m in rep["models"].items():
         hr = "-" if m["hit_rate"] is None else f"{m['hit_rate']:.3f}"
         pnl = "-" if m["paper_pnl_mean_bps"] is None else f"{m['paper_pnl_mean_bps']:+.1f}"
-        lines.append(f"| {name} | {m['resolved']} | {m['directional_calls']} | {hr} | "
-                     f"{m['hit_ci95'][0]:.2f}-{m['hit_ci95'][1]:.2f} | {m['brier_skill_vs_0.5']:+.4f} | "
-                     f"{m['ece']:.3f} | {m['paper_trades']} | {pnl} |")
+        bss = "-" if m["brier_skill_vs_base_rate"] is None else f"{m['brier_skill_vs_base_rate']:+.4f}"
+        lines.append(f"| {name} | {m['resolved']} | {m['bars']} | {m['directional_calls']} | {hr} | "
+                     f"{m['hit_ci95'][0]:.2f}-{m['hit_ci95'][1]:.2f} | {m['up_rate']:.3f} | {m['mean_p']:.3f} | "
+                     f"{bss} | {m['ece']:.3f} | {m['coverage_paper_positions']:.2f} | {pnl} |")
+    lines += ["", "## Unverified (pending, not scored)", ""]
+    lines += [f"- {k}: {v}" for k, v in rep.get("pending", {}).items()] or ["- none"]
     (LIVE / "monitor.md").write_text("\n".join(lines) + "\n")
 
 
@@ -214,7 +270,6 @@ def main():
     ap.add_argument("--ledger", default=None)
     a = ap.parse_args()
     LIVE.mkdir(parents=True, exist_ok=True)
-    wall = datetime.now(timezone.utc)
     log: list[str] = []
     df, prices, now_ms = offline(a.offline, log) if a.offline else fetch_live(a.top, log, a.venue)
     ledger = Ledger(Path(a.ledger) if a.ledger else
@@ -230,7 +285,7 @@ def main():
         "venue": health_venue,
         "symbols": int(df.index.get_level_values("symbol").nunique()),
         "last_closed_bar": str(last_bar),
-        "minutes_since_bar_close": round((now_ms / 1000 - bar_close.timestamp()) / 60, 1),
+        "minutes_since_bar_close_at_fetch": round((now_ms / 1000 - bar_close.timestamp()) / 60, 1),
         "stale_symbols": stale,
         "fetch_log": log,
     }
@@ -239,49 +294,68 @@ def main():
     done = ledger.db.execute("SELECT COUNT(*) FROM predictions WHERE asof = ?", (str(last_bar),)).fetchone()[0]
     feats = build_features(df)
     health["feature_nan_share_latest_bar"] = round(float(feats.loc[fresh.index].isna().mean().mean()), 3)
+    written = 0
     if done:
         health["note"] = "bar already predicted; only resolving"
     else:
+        all_preds = {}
         for h in HORIZONS:
-            preds, n_train, ortho_hit = predict(df, feats, last_bar, h)
+            all_preds[h] = predict(df, feats, last_bar, h)
+        # Live price fetched immediately before writing, with its exchange timestamp, so the
+        # executable entry price and the latency are measured at the moment of prediction.
+        live, price_ts_ms = fresh_prices(a.venue, prices) if not a.offline else (prices, now_ms)
+        written_at = datetime.now(timezone.utc)
+        latency_min = (written_at.timestamp() - bar_close.timestamp()) / 60
+        health["prediction_latency_min"] = round(latency_min, 1)
+        health["price_snapshot_age_s"] = round(written_at.timestamp() - price_ts_ms / 1000, 1)
+        for h in HORIZONS:
+            preds, n_train, ortho_hit = all_preds[h]
             health[f"train_rows_h{h}"] = n_train
             health[f"orthosys_hist_hit_h{h}"] = round(ortho_hit, 4)
             for model, ser in preds.items():
                 health[f"p_spread_{model}_h{h}"] = round(float(ser.std()), 4) if len(ser) > 1 else 0.0
                 for (d, sym), p in ser.items():
                     row = feats.loc[(d, sym)]
-                    ledger.append(created_at=wall.isoformat(), asof=str(d), symbol=sym, horizon_days=h,
+                    ledger.append(created_at=written_at.isoformat(), asof=str(d), symbol=sym, horizon_days=h,
                                   model=model, p_up=float(p), ref_price=float(df.loc[(d, sym), "close"]),
-                                  meta={"live_price": prices.get(sym), "bar": str(BAR),
+                                  meta={"live_price": live.get(sym), "live_price_ts_ms": price_ts_ms,
+                                        "latency_min": round(latency_min, 2),
+                                        # Too late if more than a quarter of the horizon has already elapsed.
+                                        "late": bool(latency_min > 0.25 * h * BAR.total_seconds() / 60),
+                                        "bar": str(BAR),
                                         "inputs": {k: round(float(row[k]), 5) for k in
                                                    ("ret_1", "ret_14", "rsi_14", "qvol_z", "funding_z")
                                                    if k in row and pd.notna(row[k])}})
+                    written += 1
+    health["predictions_written"] = written
 
-    # Resolve: outcome = close of bar asof + h, versus the bar close we predicted from.
-    closes = df["close"]
-    resolved = 0
-    for pid, asof, sym, h, ref in ledger.unresolved():
-        end = pd.Timestamp(asof) + h * BAR
-        if (end, sym) in closes.index:
-            ledger.resolve(pid, wall.isoformat(), float(closes.loc[(end, sym)]),
-                           float(np.log(closes.loc[(end, sym)] / ref)))
-            resolved += 1
+    resolved = resolve_pending(ledger, df["close"], BAR)
     health["resolved_this_cycle"] = resolved
     ok, n = ledger.verify()
     health["ledger_chain_valid"] = ok
     health["ledger_rows"] = n
 
-    # Track record with entry/exit prices for the monitor.
-    tr = pd.read_sql_query(
-        "SELECT p.model AS model_name, p.horizon_days, p.p_up, p.ref_price AS ref_price_entry, p.meta, "
-        "o.exit_price AS exit_px, o.up FROM predictions p JOIN outcomes o ON o.prediction_id = p.id", ledger.db)
+    # Realized track record (resolved only) and pending predictions, kept apart.
+    q = ("SELECT p.asof, p.created_at, p.symbol, p.model AS model_name, p.horizon_days, p.p_up, p.ref_price AS ref_price_entry, "
+         "p.meta, o.exit_price AS exit_px, o.up FROM predictions p {} JOIN outcomes o ON o.prediction_id = p.id {}")
+    tr = pd.read_sql_query(q.format("", ""), ledger.db)
+    pending = pd.read_sql_query(q.format("LEFT", "WHERE o.prediction_id IS NULL"), ledger.db)
     if not tr.empty:
-        tr["live_price"] = [json.loads(m).get("live_price") or r for m, r in zip(tr.meta, tr.ref_price_entry)]
-    rep = monitor(tr, health)
+        meta = [json.loads(m) for m in tr.meta]
+        tr["live_price"] = [m.get("live_price") or r for m, r in zip(meta, tr.ref_price_entry)]
+        # Rows written before latency was logged: derive it from created_at - bar close. For the first
+        # cycle created_at was the run start, so this is a lower bound (true latency ~5 min larger).
+        derived = ((pd.to_datetime(tr.created_at) - (pd.to_datetime(tr.asof) + BAR)).dt.total_seconds() / 60)
+        lat = [m.get("latency_min", d) for m, d in zip(meta, derived)]
+        tr["late"] = [la > 0.25 * h * BAR.total_seconds() / 60 for la, h in zip(lat, tr.horizon_days)]
+    rep = monitor(tr, pending, health)
     rep["alerts"] = alerts(rep)
-    with open(LIVE / "history.jsonl", "a") as fh:  # one line per cycle, for trend analysis
-        fh.write(json.dumps({"t": rep["generated_at"], "health": {k: v for k, v in health.items() if k != "fetch_log"},
-                             "alerts": rep["alerts"], "models": rep["models"]}, default=str) + "\n")
+    # One history line per cycle that changed the ledger; reruns that add nothing are not recorded twice.
+    if written or resolved:
+        line = {"t": rep["generated_at"], "health": {k: v for k, v in health.items() if k != "fetch_log"},
+                "alerts": rep["alerts"], "models": rep["models"]}
+        with open(LIVE / "history.jsonl", "a") as fh:
+            fh.write(json.dumps(line, default=str) + "\n")
     (LIVE / "monitor.json").write_text(json.dumps(rep, indent=1, default=str))
     write_markdown(rep)
     print(json.dumps(health, default=str)[:2000])

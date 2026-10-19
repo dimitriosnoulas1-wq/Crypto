@@ -38,6 +38,10 @@ CREATE TRIGGER IF NOT EXISTS no_update BEFORE UPDATE ON predictions
 BEGIN SELECT RAISE(ABORT, 'predictions are append-only'); END;
 CREATE TRIGGER IF NOT EXISTS no_delete BEFORE DELETE ON predictions
 BEGIN SELECT RAISE(ABORT, 'predictions are append-only'); END;
+CREATE TRIGGER IF NOT EXISTS no_update_outcome BEFORE UPDATE ON outcomes
+BEGIN SELECT RAISE(ABORT, 'outcomes are append-only'); END;
+CREATE TRIGGER IF NOT EXISTS no_delete_outcome BEFORE DELETE ON outcomes
+BEGIN SELECT RAISE(ABORT, 'outcomes are append-only'); END;
 """
 
 FIELDS = ("created_at", "asof", "symbol", "horizon_days", "model", "p_up", "ref_price", "meta")
@@ -69,10 +73,12 @@ class Ledger:
         self.db.commit()
         return cur.lastrowid
 
-    def resolve(self, prediction_id, resolved_at, exit_price, fwd_ret):
-        self.db.execute("INSERT OR IGNORE INTO outcomes VALUES (?,?,?,?,?)",
-                        (prediction_id, resolved_at, float(exit_price), float(fwd_ret), int(fwd_ret > 0)))
+    def resolve(self, prediction_id, resolved_at, exit_price, fwd_ret) -> bool:
+        """Scores a prediction once. Returns False if it was already scored (nothing written)."""
+        cur = self.db.execute("INSERT OR IGNORE INTO outcomes VALUES (?,?,?,?,?)",
+                              (prediction_id, resolved_at, float(exit_price), float(fwd_ret), int(fwd_ret > 0)))
         self.db.commit()
+        return cur.rowcount == 1
 
     def unresolved(self):
         return self.db.execute(

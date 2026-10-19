@@ -27,6 +27,24 @@ class BaseRate:
         return np.full(len(X), self.p)
 
 
+class RecentBaseRate:
+    """Up-rate of the most recent `days` of training data. Naive baseline that only tracks the
+    recent market direction; a model that cannot beat it has no skill beyond drift."""
+
+    def __init__(self, days=7):
+        self.days = days
+        self.name = f"recent_base_rate_{days}d"
+
+    def fit(self, X, y):
+        d = X.index.get_level_values("date")
+        recent = np.asarray(d >= d.max() - pd.Timedelta(days=self.days))
+        self.p = float(np.mean(np.asarray(y)[recent]))
+        return self
+
+    def predict_proba(self, X):
+        return np.full(len(X), self.p)
+
+
 class ConditionalFrequency:
     """P(up | bucket of one feature), estimated on the training fold."""
 
