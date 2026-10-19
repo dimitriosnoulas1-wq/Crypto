@@ -79,13 +79,14 @@ def hedge_weights(scored: pd.DataFrame, members: list[str]) -> tuple[dict, dict]
     s = s[s["asof"].isin(bars)]
     per_bar = s.groupby(["asof", "model"]).loss.mean().unstack()
     per_bar = per_bar.reindex(columns=members)
-    # Bars where a member was missing count as the bar's worst loss (no free pass).
-    per_bar = per_bar.apply(lambda r: r.fillna(r.max()), axis=1)
+    # Bars before a member existed are neutral (the bar's median loss): no penalty for being new,
+    # no free pass either. Its weight then moves only with the bars it actually predicted.
+    per_bar = per_bar.apply(lambda r: r.fillna(r.median()), axis=1)
     regret = (per_bar.sub(per_bar.min(axis=1), axis=0)).sum()
     for m in members:
         w[m] = float(np.exp(-ETA * regret.get(m, 0.0)))
-        if m in per_bar:
-            ll[m] = float(per_bar[m].mean())
+        if m in s.model.values:
+            ll[m] = float(s[s.model == m].groupby("asof").loss.mean().mean())  # its own bars only
     tot = sum(w.values())
     return {m: v / tot for m, v in w.items()}, ll
 

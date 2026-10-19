@@ -41,3 +41,14 @@ def test_veto_flags_extreme_volatility():
                      index=pd.MultiIndex.from_tuples([("t", str(i)) for i in range(10)], names=["date", "symbol"]))
     v = risk_veto(f)
     assert v.iloc[-1] == "extreme_volatility" and (v.iloc[:-1] == "").all()
+
+
+def test_new_member_is_not_penalised_for_bars_before_it_existed():
+    rows = []
+    for b in range(10):
+        rows.append({"asof": f"b{b}", "model": "old", "p_up": 0.6, "up": 1})
+        rows.append({"asof": f"b{b}", "model": "other", "p_up": 0.4, "up": 1})
+    rows.append({"asof": "b9", "model": "new", "p_up": 0.6, "up": 1})  # joined at the last bar
+    w, ll = hedge_weights(pd.DataFrame(rows), ["old", "other", "new"])
+    assert w["new"] > w["other"]          # neutral history, then as good as "old" on its own bar
+    assert abs(ll["new"] - ll["old"]) < 1e-9
