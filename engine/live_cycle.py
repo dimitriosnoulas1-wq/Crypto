@@ -274,9 +274,10 @@ def alerts(rep: dict) -> list[str]:
     for name, m in rep["models"].items():
         if not name.endswith("|all"):
             continue
-        if m["resolved"] >= 300 and m["ece"] > 0.08:
+        # Coins move together within an hour, so rows are not independent: require enough scored HOURS too.
+        if m["resolved"] >= 300 and m["bars"] >= 24 and m["ece"] > 0.08:
             out.append(f"MISCALIBRATED: {name} says {m['mean_p']:.2f} on average, reality {m['up_rate']:.2f} (ECE {m['ece']:.3f})")
-        if m["resolved"] >= 300 and m["hit_ci95"][1] < 0.5:
+        if m["resolved"] >= 300 and m["bars"] >= 24 and m["hit_ci95"][1] < 0.5:
             out.append(f"WORSE THAN COIN FLIP: {name} hit-rate CI upper bound {m['hit_ci95'][1]:.3f}")
         if m["resolved"] >= 100 and abs(m["close_vs_live_entry_bps"]) > 15:
             out.append(f"LATENCY SLIPPAGE: {name} live price differs from bar close by "
