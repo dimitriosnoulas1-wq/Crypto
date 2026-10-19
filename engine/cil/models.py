@@ -59,13 +59,16 @@ class Logistic:
         self.columns, self.C = columns, C
 
     def fit(self, X, y):
+        # Median-imputing a mostly-missing feature (e.g. OI history that only starts recently)
+        # turns it into noise; such columns are left out for this fold.
+        self.used = [c for c in self.columns if X[c].isna().mean() < 0.5]
         self.model = make_pipeline(SimpleImputer(strategy="median"), StandardScaler(),
                                    LogisticRegression(C=self.C, max_iter=2000))
-        self.model.fit(X[self.columns], y)
+        self.model.fit(X[self.used], y)
         return self
 
     def predict_proba(self, X):
-        return self.model.predict_proba(X[self.columns])[:, 1]
+        return self.model.predict_proba(X[self.used])[:, 1]
 
 
 class GBM:

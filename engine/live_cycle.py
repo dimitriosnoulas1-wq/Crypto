@@ -5,7 +5,8 @@ Run once per hour, a few minutes after the hour (cron or a scheduled task):
 
 Each run:
  1. fetches the latest closed 1h bars (+ funding, open interest, taker volume) for
-    the most liquid Binance USDT-M perpetuals (public endpoints, no keys);
+    the most liquid OKX USDT perpetuals (public endpoints, no keys; Binance/Bybit are
+    geo-blocked from the cloud environment, `--venue binance` remains for other hosts);
  2. retrains every model on labels whose outcome is already known;
  3. appends predictions for the latest closed bar to the tamper-evident ledger
     (horizons 1h and 4h), together with the live price at prediction time;
@@ -45,7 +46,10 @@ CONF = 0.55                  # paper position threshold
 
 
 # ---------------------------------------------------------------- data
-def fetch_live(top_n: int, log: list) -> tuple[pd.DataFrame, dict, int]:
+def fetch_live(top_n: int, log: list, venue: str = "okx") -> tuple[pd.DataFrame, dict, int]:
+    if venue == "okx":  # Binance/Bybit geo-block the cloud environment
+        from cil import okx
+        return okx.fetch_panel(top_n, CACHE, log)
     from cil import binance as bn
     t0 = time.time()
     now_ms = bn.server_time_ms()
@@ -206,13 +210,16 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--top", type=int, default=60)
     ap.add_argument("--offline", metavar="ASOF", help="test on archived daily data up to this date")
+    ap.add_argument("--venue", choices=["okx", "binance"], default="okx")
     ap.add_argument("--ledger", default=None)
     a = ap.parse_args()
     LIVE.mkdir(parents=True, exist_ok=True)
     wall = datetime.now(timezone.utc)
     log: list[str] = []
-    df, prices, now_ms = offline(a.offline, log) if a.offline else fetch_live(a.top, log)
-    ledger = Ledger(Path(a.ledger) if a.ledger else LIVE / ("ledger_offline.sqlite" if a.offline else "ledger.sqlite"))
+    df, prices, now_ms = offline(a.offline, log) if a.offline else fetch_live(a.top, log, a.venue)
+    ledger = Ledger(Path(a.ledger) if a.ledger else
+                    LIVE / ("ledger_offline.sqlite" if a.offline else f"ledger_{a.venue}.sqlite"))
+    health_venue = "offline" if a.offline else a.venue
 
     last_bar = df.index.get_level_values("date").max()
     bar_close = last_bar + BAR
@@ -220,6 +227,7 @@ def main():
     stale = sorted(per_sym_last[per_sym_last < last_bar].index)
     fresh = df[df.index.get_level_values("date") == last_bar]
     health = {
+        "venue": health_venue,
         "symbols": int(df.index.get_level_values("symbol").nunique()),
         "last_closed_bar": str(last_bar),
         "minutes_since_bar_close": round((now_ms / 1000 - bar_close.timestamp()) / 60, 1),

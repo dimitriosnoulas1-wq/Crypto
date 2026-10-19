@@ -47,7 +47,8 @@ def _symbol_features(g: pd.DataFrame) -> pd.DataFrame:
     f["range_n"] = (g["high"] - g["low"]) / c
     f["close_pos"] = (c - g["low"]) / (g["high"] - g["low"]).replace(0, np.nan)
     f["qvol_z"] = robust_z(np.log(g["quote_volume"].replace(0, np.nan)), 30)
-    f["trades_z"] = robust_z(np.log(g["trades"].replace(0, np.nan)), 30)
+    if "trades" in g:
+        f["trades_z"] = robust_z(np.log(g["trades"].replace(0, np.nan)), 30)
     fund = g["funding"]
     f["funding_1d"] = fund
     f["funding_7d"] = fund.rolling(7, min_periods=5).sum()
