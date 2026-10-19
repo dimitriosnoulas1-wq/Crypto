@@ -160,6 +160,46 @@ def resolve_pending(ledger: Ledger, closes: pd.Series, bar: pd.Timedelta) -> int
 
 
 # ---------------------------------------------------------------- monitor
+START_CAPITAL = 1000.0
+
+
+def wallets(tr: pd.DataFrame) -> dict:
+    """Virtual paper wallet per model and horizon, starting at START_CAPITAL (no real money).
+
+    Per scored bar: equal weight across that model's open paper positions (long if p >= CONF,
+    short if p <= 1-CONF), entry at the live price at prediction time, exit at the horizon close,
+    FEE_BPS per side. A horizon-h position ties up 1/h of the wallet, so overlapping 4h cohorts
+    are not double counted. Benchmark: long every coin of the universe the same way.
+    """
+    out = {}
+    if tr.empty:
+        return out
+    t = tr.copy()
+    t["side"] = np.where(t.p_up >= CONF, 1, np.where(t.p_up <= 1 - CONF, -1, 0))
+    gross = t.exit_px / t.live_price - 1
+    fee = 2 * FEE_BPS / 1e4
+    t["ret"] = t.side * gross - (t.side != 0) * fee
+    t["long_all"] = gross - fee
+    for (model, h), g in t.groupby(["model_name", "horizon_days"]):
+        cap, n_tr, wins = START_CAPITAL, 0, 0
+        for _, b in g.sort_values("asof").groupby("asof"):
+            act = b[b.side != 0]
+            if len(act):
+                cap *= 1 + act.ret.mean() / h
+                n_tr += len(act)
+                wins += int((act.ret > 0).sum())
+        out[f"{model}|h{h}"] = {"value": round(cap, 2), "return_pct": round((cap / START_CAPITAL - 1) * 100, 2),
+                                "trades": n_tr, "wins": wins, "scored_bars": int(g["asof"].nunique())}
+    for h, g in t[t.model_name == "base_rate"].groupby("horizon_days"):
+        cap = START_CAPITAL
+        for _, b in g.sort_values("asof").groupby("asof"):
+            cap *= 1 + b.long_all.mean() / h
+        out[f"benchmark_long_all_coins|h{h}"] = {"value": round(cap, 2), "return_pct": round((cap / START_CAPITAL - 1) * 100, 2),
+                                                 "trades": int(len(g)), "wins": int((g.long_all > 0).sum()),
+                                                 "scored_bars": int(g["asof"].nunique())}
+    return out
+
+
 def monitor(tr: pd.DataFrame, pending: pd.DataFrame, health: dict) -> dict:
     """Realized results only. `tr`: resolved predictions; `pending`: not yet matured (never scored).
 
@@ -262,6 +302,10 @@ def write_markdown(rep: dict):
         lines.append(f"| {name} | {m['resolved']} | {m['bars']} | {m['directional_calls']} | {hr} | "
                      f"{m['hit_ci95'][0]:.2f}-{m['hit_ci95'][1]:.2f} | {m['up_rate']:.3f} | {m['mean_p']:.3f} | "
                      f"{bss} | {m['ece']:.3f} | {m['coverage_paper_positions']:.2f} | {pnl} |")
+    lines += ["", f"## Virtual wallets (paper only, start {START_CAPITAL:.0f}, fees {FEE_BPS} bps/side)", "",
+              "| model / horizon | value | return | trades | wins | scored hours |", "|---|---|---|---|---|---|"]
+    for name, w in rep.get("wallets", {}).items():
+        lines.append(f"| {name} | {w['value']:.2f} | {w['return_pct']:+.2f}% | {w['trades']} | {w['wins']} | {w['scored_bars']} |")
     lines += ["", "## Unverified (pending, not scored)", ""]
     lines += [f"- {k}: {v}" for k, v in rep.get("pending", {}).items()] or ["- none"]
     (LIVE / "monitor.md").write_text("\n".join(lines) + "\n")
@@ -364,6 +408,7 @@ def main():
         lat = [m.get("latency_min", d) for m, d in zip(meta, derived)]
         tr["late"] = [la > 0.25 * h * BAR.total_seconds() / 60 for la, h in zip(lat, tr.horizon_days)]
     rep = monitor(tr, pending, health)
+    rep["wallets"] = wallets(tr)
     rep["alerts"] = alerts(rep)
     # One history line per cycle that changed the ledger; reruns that add nothing are not recorded twice.
     if written or resolved:

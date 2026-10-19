@@ -67,3 +67,14 @@ def test_recent_base_rate_uses_only_last_days():
     y = np.array([1] * 10 + [0] * 10)
     m = RecentBaseRate(7).fit(pd.DataFrame(index=idx), y)
     assert m.p == 0.0                       # the last 8 days (inclusive window) are all 0
+
+
+def test_wallet_accounting():
+    from live_cycle import wallets, FEE_BPS
+    tr = pd.DataFrame({
+        "asof": ["b1", "b1", "b2"], "model_name": ["m", "m", "m"], "horizon_days": [1, 1, 1],
+        "p_up": [0.6, 0.4, 0.5], "live_price": [100.0, 100.0, 100.0], "exit_px": [110.0, 90.0, 120.0]})
+    w = wallets(tr)["m|h1"]
+    fee = 2 * FEE_BPS / 1e4
+    assert w["trades"] == 2 and w["wins"] == 2                     # bar b2: p=0.5 -> no position
+    assert w["value"] == pytest.approx(1000 * (1 + (0.10 - fee)), abs=0.01)   # long +10%, short +10%
