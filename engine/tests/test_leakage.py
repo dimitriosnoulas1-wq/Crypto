@@ -59,3 +59,12 @@ def test_ledger_is_append_only_and_tamper_evident():
         led.db.commit()
         ok, n = led.verify()
         assert not ok and n == 1
+
+
+def test_orthosys_does_not_look_ahead(df):
+    from cil.orthosys import orthosys_panel
+    cut = pd.Timestamp("2024-03-01", tz="UTC")
+    full = orthosys_panel(df)
+    trunc = orthosys_panel(df[df.index.get_level_values("date") <= cut])
+    a = full[full.index.get_level_values("date") <= cut].sort_index()
+    pd.testing.assert_frame_equal(a, trunc.sort_index(), check_exact=False, rtol=1e-9, atol=1e-12)
