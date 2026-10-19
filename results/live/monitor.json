@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-19T17:06:37.425435+00:00",
+ "generated_at": "2026-10-19T17:10:00.521754+00:00",
  "health": {
   "venue": "okx",
   "symbols": 62,
@@ -9,15 +9,15 @@
    "PYTH"
   ],
   "last_closed_bar": "2026-10-19 16:00:00+00:00",
-  "minutes_since_bar_close_at_fetch": 4.8,
+  "minutes_since_bar_close_at_fetch": 8.3,
   "stale_symbols": [],
   "fetch_log": [
-   "fetch_seconds 108.2 instruments 62/62"
+   "fetch_seconds 102.8 instruments 62/62"
   ],
   "feature_nan_share_latest_bar": 0.026,
   "note": "bar already predicted; only resolving",
   "predictions_written": 0,
-  "resolved_this_cycle": 10,
+  "resolved_this_cycle": 0,
   "ledger_chain_valid": true,
   "ledger_rows": 1320
  },
