@@ -1,57 +1,58 @@
-# Live monitor (2026-10-20T18:07:46.721254+00:00)
+# Live monitor (2026-10-20T19:08:23.585237+00:00)
 
 ## Alerts
 
-- WORSE THAN COIN FLIP: base_rate|h1|all hit-rate CI upper bound 0.486
-- WORSE THAN COIN FLIP: recent_base_rate_7d|h1|all hit-rate CI upper bound 0.491
+- WORSE THAN COIN FLIP: base_rate|h1|all hit-rate CI upper bound 0.497
+- MISCALIBRATED: lgbm_calibrated|h4|all says 0.46 on average, reality 0.55 (ECE 0.098)
+- WORSE THAN COIN FLIP: lgbm_calibrated|h4|all hit-rate CI upper bound 0.472
 
 ## Health
 
 - **venue**: okx
-- **symbols**: 64
+- **symbols**: 63
 - **universe_size**: 60
-- **fetched_only_for_scoring**: ['MUBARAK', 'PYTH', 'S', 'WLFI']
-- **last_closed_bar**: 2026-10-20 17:00:00+00:00
-- **minutes_since_bar_close_at_fetch**: 5.6
+- **fetched_only_for_scoring**: ['A', 'S', 'WLFI']
+- **last_closed_bar**: 2026-10-20 18:00:00+00:00
+- **minutes_since_bar_close_at_fetch**: 6.3
 - **stale_symbols**: []
-- **fetch_log**: ['fetch_seconds 112.9 instruments 64/64']
+- **fetch_log**: ['fetch_seconds 107.6 instruments 63/63']
 - **feature_nan_share_latest_bar**: 0.026
-- **council_weights_h1**: {'base_rate': 0.122, 'recent_base_rate_7d': 0.091, 'momentum_24': 0.142, 'logistic': 0.167, 'lgbm_calibrated': 0.163, 'analog_k100': 0.063, 'derivatives': 0.125, 'orthosys': 0.126}
-- **council_member_logloss_h1**: {'base_rate': 0.6935, 'recent_base_rate_7d': 0.6978, 'momentum_24': 0.6916, 'logistic': 0.6894, 'lgbm_calibrated': 0.6897, 'analog_k100': 0.705, 'derivatives': 0.6937, 'orthosys': 0.6932}
-- **council_calls_h1**: 13
-- **council_abstain_h1**: {'no_edge': 45, 'spoke': 13, 'extreme_volatility': 2}
-- **council_weights_h4**: {'base_rate': 0.159, 'recent_base_rate_7d': 0.024, 'momentum_24': 0.16, 'logistic': 0.252, 'lgbm_calibrated': 0.077, 'analog_k100': 0.017, 'derivatives': 0.152, 'orthosys': 0.158}
-- **council_member_logloss_h4**: {'base_rate': 0.6929, 'recent_base_rate_7d': 0.7226, 'momentum_24': 0.6928, 'logistic': 0.686, 'lgbm_calibrated': 0.7038, 'analog_k100': 0.7361, 'derivatives': 0.6933, 'orthosys': 0.693}
-- **council_calls_h4**: 1
-- **council_abstain_h4**: {'no_edge': 37, 'members_disagree': 20, 'extreme_volatility': 2, 'spoke': 1}
-- **prediction_latency_min**: 7.7
-- **price_snapshot_age_s**: 0.4
-- **train_rows_h1**: 93802
-- **orthosys_hist_hit_h1**: 0.5252
+- **council_weights_h1**: {'base_rate': 0.128, 'recent_base_rate_7d': 0.091, 'momentum_24': 0.146, 'logistic': 0.164, 'lgbm_calibrated': 0.152, 'analog_k100': 0.059, 'derivatives': 0.131, 'orthosys': 0.128}
+- **council_member_logloss_h1**: {'base_rate': 0.6936, 'recent_base_rate_7d': 0.6981, 'momentum_24': 0.6919, 'logistic': 0.6904, 'lgbm_calibrated': 0.6914, 'analog_k100': 0.7063, 'derivatives': 0.6937, 'orthosys': 0.6936}
+- **council_calls_h1**: 2
+- **council_abstain_h1**: {'no_edge': 55, 'extreme_volatility': 3, 'spoke': 2}
+- **council_weights_h4**: {'base_rate': 0.17, 'recent_base_rate_7d': 0.02, 'momentum_24': 0.171, 'logistic': 0.227, 'lgbm_calibrated': 0.068, 'analog_k100': 0.015, 'derivatives': 0.163, 'orthosys': 0.167}
+- **council_member_logloss_h4**: {'base_rate': 0.6928, 'recent_base_rate_7d': 0.7254, 'momentum_24': 0.6927, 'logistic': 0.6886, 'lgbm_calibrated': 0.7061, 'analog_k100': 0.7377, 'derivatives': 0.6931, 'orthosys': 0.693}
+- **council_calls_h4**: 0
+- **council_abstain_h4**: {'no_edge': 47, 'members_disagree': 10, 'extreme_volatility': 3}
+- **prediction_latency_min**: 8.3
+- **price_snapshot_age_s**: 0.6
+- **train_rows_h1**: 92361
+- **orthosys_hist_hit_h1**: 0.5265
 - **p_spread_base_rate_h1**: 0.0
 - **p_spread_recent_base_rate_7d_h1**: 0.0
-- **p_spread_momentum_24_h1**: 0.0079
-- **p_spread_logistic_h1**: 0.029
-- **p_spread_lgbm_calibrated_h1**: 0.0084
-- **p_spread_analog_k100_h1**: 0.0521
-- **p_spread_derivatives_h1**: 0.0012
-- **p_spread_orthosys_h1**: 0.0135
-- **p_spread_council_h1**: 0.0103
-- **train_rows_h4**: 93610
-- **orthosys_hist_hit_h4**: 0.5143
+- **p_spread_momentum_24_h1**: 0.0064
+- **p_spread_logistic_h1**: 0.0229
+- **p_spread_lgbm_calibrated_h1**: 0.0122
+- **p_spread_analog_k100_h1**: 0.0593
+- **p_spread_derivatives_h1**: 0.0014
+- **p_spread_orthosys_h1**: 0.01
+- **p_spread_council_h1**: 0.0046
+- **train_rows_h4**: 92172
+- **orthosys_hist_hit_h4**: 0.515
 - **p_spread_base_rate_h4**: 0.0
 - **p_spread_recent_base_rate_7d_h4**: 0.0
-- **p_spread_momentum_24_h4**: 0.0011
-- **p_spread_logistic_h4**: 0.0559
-- **p_spread_lgbm_calibrated_h4**: 0.0052
-- **p_spread_analog_k100_h4**: 0.0702
-- **p_spread_derivatives_h4**: 0.0045
-- **p_spread_orthosys_h4**: 0.0076
-- **p_spread_council_h4**: 0.0029
+- **p_spread_momentum_24_h4**: 0.0006
+- **p_spread_logistic_h4**: 0.0496
+- **p_spread_lgbm_calibrated_h4**: 0.0046
+- **p_spread_analog_k100_h4**: 0.076
+- **p_spread_derivatives_h4**: 0.0049
+- **p_spread_orthosys_h4**: 0.0056
+- **p_spread_council_h4**: 0.0
 - **predictions_written**: 1080
 - **resolved_this_cycle**: 1080
 - **ledger_chain_valid**: True
-- **ledger_rows**: 27240
+- **ledger_rows**: 28320
 
 ## Realized results (resolved predictions only)
 
@@ -61,90 +62,90 @@ Brier skill vs base rate = improvement over the naive base-rate model on the sam
 
 | model / horizon / subset | resolved | bars | calls | hit rate | 95% CI | up rate | mean p | Brier skill vs base | ECE | coverage | mean paper pnl bps |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| analog_k100|h1|all | 1260 | 21 | 1260 | 0.489 | 0.46-0.52 | 0.546 | 0.472 | -0.0245 | 0.078 | 0.49 | -12.5 |
-| analog_k100|h1|on_time | 1260 | 21 | 1260 | 0.489 | 0.46-0.52 | 0.546 | 0.472 | -0.0245 | 0.078 | 0.49 | -12.5 |
-| analog_k100|h4|all | 1080 | 18 | 1080 | 0.445 | 0.42-0.48 | 0.563 | 0.447 | -0.0858 | 0.133 | 0.62 | -73.0 |
-| analog_k100|h4|on_time | 1080 | 18 | 1080 | 0.445 | 0.42-0.48 | 0.563 | 0.447 | -0.0858 | 0.133 | 0.62 | -73.0 |
-| base_rate|h1|all | 1560 | 26 | 1560 | 0.462 | 0.44-0.49 | 0.538 | 0.498 | +0.0000 | 0.040 | 0.00 | - |
-| base_rate|h1|on_time | 1500 | 25 | 1500 | 0.466 | 0.44-0.49 | 0.534 | 0.498 | +0.0000 | 0.036 | 0.00 | - |
+| analog_k100|h1|all | 1320 | 22 | 1320 | 0.502 | 0.47-0.53 | 0.532 | 0.471 | -0.0184 | 0.065 | 0.50 | -10.1 |
+| analog_k100|h1|on_time | 1320 | 22 | 1320 | 0.502 | 0.47-0.53 | 0.532 | 0.471 | -0.0184 | 0.065 | 0.50 | -10.1 |
+| analog_k100|h4|all | 1140 | 19 | 1140 | 0.458 | 0.43-0.49 | 0.544 | 0.446 | -0.0745 | 0.121 | 0.63 | -58.7 |
+| analog_k100|h4|on_time | 1140 | 19 | 1140 | 0.458 | 0.43-0.49 | 0.544 | 0.446 | -0.0745 | 0.121 | 0.63 | -58.7 |
+| base_rate|h1|all | 1620 | 27 | 1620 | 0.473 | 0.45-0.50 | 0.527 | 0.498 | +0.0000 | 0.029 | 0.00 | - |
+| base_rate|h1|on_time | 1560 | 26 | 1560 | 0.478 | 0.45-0.50 | 0.522 | 0.498 | +0.0000 | 0.024 | 0.00 | - |
 | base_rate|h1|late | 60 | 1 | 60 | 0.350 | 0.24-0.48 | 0.650 | 0.498 | +0.0000 | 0.152 | 0.00 | - |
-| base_rate|h4|all | 1380 | 23 | 1380 | 0.569 | 0.54-0.59 | 0.569 | 0.503 | +0.0000 | 0.066 | 0.00 | - |
-| base_rate|h4|on_time | 1380 | 23 | 1380 | 0.569 | 0.54-0.59 | 0.569 | 0.503 | +0.0000 | 0.066 | 0.00 | - |
-| council|h1|all | 1260 | 21 | 230 | 0.517 | 0.45-0.58 | 0.546 | 0.495 | +0.0022 | 0.051 | 0.00 | +64.4 |
-| council|h1|on_time | 1260 | 21 | 230 | 0.517 | 0.45-0.58 | 0.546 | 0.495 | +0.0022 | 0.051 | 0.00 | +64.4 |
-| council|h4|all | 1080 | 18 | 18 | 0.556 | 0.34-0.75 | 0.563 | 0.500 | -0.0003 | 0.064 | 0.00 | - |
-| council|h4|on_time | 1080 | 18 | 18 | 0.556 | 0.34-0.75 | 0.563 | 0.500 | -0.0003 | 0.064 | 0.00 | - |
-| derivatives|h1|all | 1260 | 21 | 1260 | 0.451 | 0.42-0.48 | 0.546 | 0.498 | -0.0001 | 0.051 | 0.00 | - |
-| derivatives|h1|on_time | 1260 | 21 | 1260 | 0.451 | 0.42-0.48 | 0.546 | 0.498 | -0.0001 | 0.051 | 0.00 | - |
-| derivatives|h4|all | 1080 | 18 | 1080 | 0.559 | 0.53-0.59 | 0.563 | 0.502 | -0.0004 | 0.061 | 0.00 | -117.6 |
-| derivatives|h4|on_time | 1080 | 18 | 1080 | 0.559 | 0.53-0.59 | 0.563 | 0.502 | -0.0004 | 0.061 | 0.00 | -117.6 |
-| lgbm_calibrated|h1|all | 1560 | 26 | 1560 | 0.557 | 0.53-0.58 | 0.538 | 0.478 | +0.0042 | 0.066 | 0.10 | +33.6 |
-| lgbm_calibrated|h1|on_time | 1500 | 25 | 1500 | 0.565 | 0.54-0.59 | 0.534 | 0.478 | +0.0059 | 0.061 | 0.10 | +33.6 |
+| base_rate|h4|all | 1440 | 24 | 1440 | 0.553 | 0.53-0.58 | 0.553 | 0.503 | +0.0000 | 0.050 | 0.00 | - |
+| base_rate|h4|on_time | 1440 | 24 | 1440 | 0.553 | 0.53-0.58 | 0.553 | 0.503 | +0.0000 | 0.050 | 0.00 | - |
+| council|h1|all | 1320 | 22 | 243 | 0.535 | 0.47-0.60 | 0.532 | 0.495 | +0.0025 | 0.040 | 0.00 | +64.4 |
+| council|h1|on_time | 1320 | 22 | 243 | 0.535 | 0.47-0.60 | 0.532 | 0.495 | +0.0025 | 0.040 | 0.00 | +64.4 |
+| council|h4|all | 1140 | 19 | 18 | 0.556 | 0.34-0.75 | 0.544 | 0.500 | +0.0000 | 0.045 | 0.00 | - |
+| council|h4|on_time | 1140 | 19 | 18 | 0.556 | 0.34-0.75 | 0.544 | 0.500 | +0.0000 | 0.045 | 0.00 | - |
+| derivatives|h1|all | 1320 | 22 | 1320 | 0.465 | 0.44-0.49 | 0.532 | 0.498 | -0.0001 | 0.037 | 0.00 | - |
+| derivatives|h1|on_time | 1320 | 22 | 1320 | 0.465 | 0.44-0.49 | 0.532 | 0.498 | -0.0001 | 0.037 | 0.00 | - |
+| derivatives|h4|all | 1140 | 19 | 1140 | 0.542 | 0.51-0.57 | 0.544 | 0.502 | -0.0002 | 0.042 | 0.00 | -117.6 |
+| derivatives|h4|on_time | 1140 | 19 | 1140 | 0.542 | 0.51-0.57 | 0.544 | 0.502 | -0.0002 | 0.042 | 0.00 | -117.6 |
+| lgbm_calibrated|h1|all | 1620 | 27 | 1620 | 0.565 | 0.54-0.59 | 0.527 | 0.478 | +0.0060 | 0.054 | 0.09 | +33.6 |
+| lgbm_calibrated|h1|on_time | 1560 | 26 | 1560 | 0.573 | 0.55-0.60 | 0.522 | 0.478 | +0.0077 | 0.049 | 0.10 | +33.6 |
 | lgbm_calibrated|h1|late | 60 | 1 | 60 | 0.350 | 0.24-0.48 | 0.650 | 0.467 | -0.0372 | 0.183 | 0.00 | - |
-| lgbm_calibrated|h4|all | 1380 | 23 | 1380 | 0.430 | 0.40-0.46 | 0.569 | 0.462 | -0.0265 | 0.108 | 0.14 | -17.9 |
-| lgbm_calibrated|h4|on_time | 1380 | 23 | 1380 | 0.430 | 0.40-0.46 | 0.569 | 0.462 | -0.0265 | 0.108 | 0.14 | -17.9 |
-| logistic|h1|all | 1560 | 26 | 1560 | 0.525 | 0.50-0.55 | 0.538 | 0.490 | +0.0064 | 0.053 | 0.12 | -6.3 |
-| logistic|h1|on_time | 1500 | 25 | 1500 | 0.515 | 0.49-0.54 | 0.534 | 0.489 | +0.0043 | 0.050 | 0.12 | -6.0 |
+| lgbm_calibrated|h4|all | 1440 | 24 | 1440 | 0.446 | 0.42-0.47 | 0.553 | 0.459 | -0.0163 | 0.098 | 0.15 | -1.8 |
+| lgbm_calibrated|h4|on_time | 1440 | 24 | 1440 | 0.446 | 0.42-0.47 | 0.553 | 0.459 | -0.0163 | 0.098 | 0.15 | -1.8 |
+| logistic|h1|all | 1620 | 27 | 1620 | 0.534 | 0.51-0.56 | 0.527 | 0.490 | +0.0070 | 0.041 | 0.12 | -6.9 |
+| logistic|h1|on_time | 1560 | 26 | 1560 | 0.524 | 0.50-0.55 | 0.522 | 0.489 | +0.0051 | 0.038 | 0.12 | -6.7 |
 | logistic|h1|late | 60 | 1 | 60 | 0.783 | 0.66-0.87 | 0.650 | 0.519 | +0.0580 | 0.258 | 0.05 | -21.5 |
-| logistic|h4|all | 1380 | 23 | 1380 | 0.543 | 0.52-0.57 | 0.569 | 0.498 | +0.0085 | 0.071 | 0.14 | +48.8 |
-| logistic|h4|on_time | 1380 | 23 | 1380 | 0.543 | 0.52-0.57 | 0.569 | 0.498 | +0.0085 | 0.071 | 0.14 | +48.8 |
-| momentum_24|h1|all | 1560 | 26 | 1560 | 0.547 | 0.52-0.57 | 0.538 | 0.498 | +0.0034 | 0.040 | 0.00 | - |
-| momentum_24|h1|on_time | 1500 | 25 | 1500 | 0.541 | 0.52-0.57 | 0.534 | 0.498 | +0.0029 | 0.036 | 0.00 | - |
+| logistic|h4|all | 1440 | 24 | 1440 | 0.550 | 0.52-0.58 | 0.553 | 0.495 | +0.0134 | 0.060 | 0.17 | +44.0 |
+| logistic|h4|on_time | 1440 | 24 | 1440 | 0.550 | 0.52-0.58 | 0.553 | 0.495 | +0.0134 | 0.060 | 0.17 | +44.0 |
+| momentum_24|h1|all | 1620 | 27 | 1620 | 0.557 | 0.53-0.58 | 0.527 | 0.498 | +0.0042 | 0.047 | 0.00 | - |
+| momentum_24|h1|on_time | 1560 | 26 | 1560 | 0.552 | 0.53-0.58 | 0.522 | 0.498 | +0.0038 | 0.042 | 0.00 | - |
 | momentum_24|h1|late | 60 | 1 | 60 | 0.700 | 0.57-0.80 | 0.650 | 0.502 | +0.0143 | 0.192 | 0.00 | - |
-| momentum_24|h4|all | 1380 | 23 | 1380 | 0.569 | 0.54-0.59 | 0.569 | 0.503 | +0.0002 | 0.066 | 0.00 | - |
-| momentum_24|h4|on_time | 1380 | 23 | 1380 | 0.569 | 0.54-0.59 | 0.569 | 0.503 | +0.0002 | 0.066 | 0.00 | - |
-| orthosys|h1|all | 1560 | 26 | 134 | 0.470 | 0.39-0.55 | 0.538 | 0.498 | +0.0000 | 0.040 | 0.00 | - |
-| orthosys|h1|on_time | 1500 | 25 | 133 | 0.466 | 0.38-0.55 | 0.534 | 0.498 | -0.0002 | 0.036 | 0.00 | - |
+| momentum_24|h4|all | 1440 | 24 | 1440 | 0.553 | 0.53-0.58 | 0.553 | 0.503 | +0.0003 | 0.051 | 0.00 | - |
+| momentum_24|h4|on_time | 1440 | 24 | 1440 | 0.553 | 0.53-0.58 | 0.553 | 0.503 | +0.0003 | 0.051 | 0.00 | - |
+| orthosys|h1|all | 1620 | 27 | 163 | 0.552 | 0.48-0.63 | 0.527 | 0.498 | +0.0014 | 0.033 | 0.00 | - |
+| orthosys|h1|on_time | 1560 | 26 | 162 | 0.549 | 0.47-0.62 | 0.522 | 0.498 | +0.0013 | 0.028 | 0.00 | - |
 | orthosys|h1|late | 60 | 1 | 1 | 1.000 | 0.21-1.00 | 0.650 | 0.500 | +0.0046 | 0.166 | 0.00 | - |
-| orthosys|h4|all | 1380 | 23 | 64 | 0.547 | 0.43-0.66 | 0.569 | 0.499 | -0.0005 | 0.073 | 0.00 | - |
-| orthosys|h4|on_time | 1380 | 23 | 64 | 0.547 | 0.43-0.66 | 0.569 | 0.499 | -0.0005 | 0.073 | 0.00 | - |
-| recent_base_rate_7d|h1|all | 1500 | 25 | 1500 | 0.466 | 0.44-0.49 | 0.534 | 0.472 | -0.0092 | 0.062 | 0.00 | - |
-| recent_base_rate_7d|h1|on_time | 1500 | 25 | 1500 | 0.466 | 0.44-0.49 | 0.534 | 0.472 | -0.0092 | 0.062 | 0.00 | - |
-| recent_base_rate_7d|h4|all | 1320 | 22 | 1320 | 0.419 | 0.39-0.45 | 0.581 | 0.437 | -0.0652 | 0.144 | 1.00 | -74.0 |
-| recent_base_rate_7d|h4|on_time | 1320 | 22 | 1320 | 0.419 | 0.39-0.45 | 0.581 | 0.437 | -0.0652 | 0.144 | 1.00 | -74.0 |
+| orthosys|h4|all | 1440 | 24 | 87 | 0.609 | 0.50-0.71 | 0.553 | 0.499 | +0.0004 | 0.065 | 0.00 | - |
+| orthosys|h4|on_time | 1440 | 24 | 87 | 0.609 | 0.50-0.71 | 0.553 | 0.499 | +0.0004 | 0.065 | 0.00 | - |
+| recent_base_rate_7d|h1|all | 1560 | 26 | 1560 | 0.478 | 0.45-0.50 | 0.522 | 0.472 | -0.0072 | 0.050 | 0.00 | - |
+| recent_base_rate_7d|h1|on_time | 1560 | 26 | 1560 | 0.478 | 0.45-0.50 | 0.522 | 0.472 | -0.0072 | 0.050 | 0.00 | - |
+| recent_base_rate_7d|h4|all | 1380 | 23 | 1380 | 0.436 | 0.41-0.46 | 0.564 | 0.437 | -0.0569 | 0.127 | 1.00 | -69.2 |
+| recent_base_rate_7d|h4|on_time | 1380 | 23 | 1380 | 0.436 | 0.41-0.46 | 0.564 | 0.437 | -0.0569 | 0.127 | 1.00 | -69.2 |
 
 ## Virtual wallets (paper only, start 1000, fees 5 bps/side)
 
 | model / horizon | value | return | trades | wins | scored hours |
 |---|---|---|---|---|---|
-| analog_k100|h1 | 970.99 | -2.90% | 618 | 232 | 21 |
-| analog_k100|h4 | 970.91 | -2.91% | 672 | 257 | 18 |
-| base_rate|h1 | 1000.00 | +0.00% | 0 | 0 | 26 |
-| base_rate|h4 | 1000.00 | +0.00% | 0 | 0 | 23 |
-| council|h1 | 1006.44 | +0.64% | 3 | 2 | 21 |
-| council|h4 | 1000.00 | +0.00% | 0 | 0 | 18 |
-| derivatives|h1 | 1000.00 | +0.00% | 0 | 0 | 21 |
-| derivatives|h4 | 985.33 | -1.47% | 5 | 1 | 18 |
-| lgbm_calibrated|h1 | 951.51 | -4.85% | 150 | 81 | 26 |
-| lgbm_calibrated|h4 | 923.28 | -7.67% | 197 | 108 | 23 |
-| logistic|h1 | 955.94 | -4.41% | 190 | 97 | 26 |
-| logistic|h4 | 1038.97 | +3.90% | 197 | 107 | 23 |
-| momentum_24|h1 | 1000.00 | +0.00% | 0 | 0 | 26 |
-| momentum_24|h4 | 1000.00 | +0.00% | 0 | 0 | 23 |
-| orthosys|h1 | 1000.00 | +0.00% | 0 | 0 | 26 |
-| orthosys|h4 | 1000.00 | +0.00% | 0 | 0 | 23 |
-| recent_base_rate_7d|h1 | 1000.00 | +0.00% | 0 | 0 | 25 |
-| recent_base_rate_7d|h4 | 960.01 | -4.00% | 1320 | 502 | 22 |
-| benchmark_long_all_coins|h1 | 1007.54 | +0.75% | 1560 | 739 | 26 |
-| benchmark_long_all_coins|h4 | 1028.61 | +2.86% | 1380 | 728 | 23 |
-| PRO_analog_k100|h1 | 1000.00 | +0.00% | 0 | 0 | 21 |
-| PRO_analog_k100|h4 | 1000.00 | +0.00% | 0 | 0 | 18 |
-| PRO_base_rate|h1 | 1000.00 | +0.00% | 0 | 0 | 26 |
-| PRO_base_rate|h4 | 1000.00 | +0.00% | 0 | 0 | 23 |
-| PRO_council|h1 | 1000.00 | +0.00% | 0 | 0 | 21 |
-| PRO_council|h4 | 1000.00 | +0.00% | 0 | 0 | 18 |
-| PRO_derivatives|h1 | 1000.00 | +0.00% | 0 | 0 | 21 |
-| PRO_derivatives|h4 | 1000.00 | +0.00% | 0 | 0 | 18 |
-| PRO_lgbm_calibrated|h1 | 1000.00 | +0.00% | 0 | 0 | 26 |
-| PRO_lgbm_calibrated|h4 | 1000.00 | +0.00% | 0 | 0 | 23 |
-| PRO_logistic|h1 | 1000.00 | +0.00% | 0 | 0 | 26 |
-| PRO_logistic|h4 | 1000.00 | +0.00% | 0 | 0 | 23 |
-| PRO_momentum_24|h1 | 1000.00 | +0.00% | 0 | 0 | 26 |
-| PRO_momentum_24|h4 | 1000.00 | +0.00% | 0 | 0 | 23 |
-| PRO_orthosys|h1 | 1000.00 | +0.00% | 0 | 0 | 26 |
-| PRO_orthosys|h4 | 1000.00 | +0.00% | 0 | 0 | 23 |
-| PRO_recent_base_rate_7d|h1 | 1000.00 | +0.00% | 0 | 0 | 25 |
-| PRO_recent_base_rate_7d|h4 | 1000.00 | +0.00% | 0 | 0 | 22 |
+| analog_k100|h1 | 973.79 | -2.62% | 656 | 259 | 22 |
+| analog_k100|h4 | 974.94 | -2.51% | 715 | 290 | 19 |
+| base_rate|h1 | 1000.00 | +0.00% | 0 | 0 | 27 |
+| base_rate|h4 | 1000.00 | +0.00% | 0 | 0 | 24 |
+| council|h1 | 1006.44 | +0.64% | 3 | 2 | 22 |
+| council|h4 | 1000.00 | +0.00% | 0 | 0 | 19 |
+| derivatives|h1 | 1000.00 | +0.00% | 0 | 0 | 22 |
+| derivatives|h4 | 985.33 | -1.47% | 5 | 1 | 19 |
+| lgbm_calibrated|h1 | 951.51 | -4.85% | 150 | 81 | 27 |
+| lgbm_calibrated|h4 | 926.57 | -7.34% | 219 | 127 | 24 |
+| logistic|h1 | 953.42 | -4.66% | 196 | 101 | 27 |
+| logistic|h4 | 1039.59 | +3.96% | 244 | 143 | 24 |
+| momentum_24|h1 | 1000.00 | +0.00% | 0 | 0 | 27 |
+| momentum_24|h4 | 1000.00 | +0.00% | 0 | 0 | 24 |
+| orthosys|h1 | 1000.00 | +0.00% | 0 | 0 | 27 |
+| orthosys|h4 | 1000.00 | +0.00% | 0 | 0 | 24 |
+| recent_base_rate_7d|h1 | 1000.00 | +0.00% | 0 | 0 | 26 |
+| recent_base_rate_7d|h4 | 960.86 | -3.91% | 1380 | 548 | 23 |
+| benchmark_long_all_coins|h1 | 1004.81 | +0.48% | 1620 | 756 | 27 |
+| benchmark_long_all_coins|h4 | 1027.18 | +2.72% | 1440 | 740 | 24 |
+| PRO_analog_k100|h1 | 1000.00 | +0.00% | 0 | 0 | 22 |
+| PRO_analog_k100|h4 | 1000.00 | +0.00% | 0 | 0 | 19 |
+| PRO_base_rate|h1 | 1000.00 | +0.00% | 0 | 0 | 27 |
+| PRO_base_rate|h4 | 1000.00 | +0.00% | 0 | 0 | 24 |
+| PRO_council|h1 | 1000.00 | +0.00% | 0 | 0 | 22 |
+| PRO_council|h4 | 1000.00 | +0.00% | 0 | 0 | 19 |
+| PRO_derivatives|h1 | 1000.00 | +0.00% | 0 | 0 | 22 |
+| PRO_derivatives|h4 | 1000.00 | +0.00% | 0 | 0 | 19 |
+| PRO_lgbm_calibrated|h1 | 1000.00 | +0.00% | 0 | 0 | 27 |
+| PRO_lgbm_calibrated|h4 | 1000.00 | +0.00% | 0 | 0 | 24 |
+| PRO_logistic|h1 | 1000.00 | +0.00% | 0 | 0 | 27 |
+| PRO_logistic|h4 | 1000.00 | +0.00% | 0 | 0 | 24 |
+| PRO_momentum_24|h1 | 1000.00 | +0.00% | 0 | 0 | 27 |
+| PRO_momentum_24|h4 | 1000.00 | +0.00% | 0 | 0 | 24 |
+| PRO_orthosys|h1 | 1000.00 | +0.00% | 0 | 0 | 27 |
+| PRO_orthosys|h4 | 1000.00 | +0.00% | 0 | 0 | 24 |
+| PRO_recent_base_rate_7d|h1 | 1000.00 | +0.00% | 0 | 0 | 26 |
+| PRO_recent_base_rate_7d|h4 | 1000.00 | +0.00% | 0 | 0 | 23 |
 
 ## Unverified (pending, not scored)
 
