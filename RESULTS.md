@@ -133,3 +133,13 @@ trend following (CTA). Δοκιμάστηκαν στα δικά μας ημερ�
 * **Επιφυλάξεις:** το σφάλμα του Sharpe σε ~4 χρόνια είναι ≈ ±0,5 ⇒ δεν είναι στατιστική απόδειξη· επιλέχθηκε L=60 ανάμεσα σε 3 τιμές· χωρίς funding perps / ολίσθηση / squeezes· χωρίς 2022 στον συνδυασμό (χρειάζεται ιστορικό).
 * **Εφαρμογή:** νέο σκέλος στο live paper track (`xs_paper.py` → `results/live/trend_book.jsonl`, hash-chained): trend following 60 ημερών, vol-targeted (50%), cap 3×, ημερήσια εναλλαγή, 40 ρευστότερα perps. Τρέχει μαζί με το low-vol σκέλος.
 * **Δεν έγινε ακόμα (επόμενα):** funding carry (το OKX δίνει ~3 μήνες ιστορικού χρηματοδότησης: δείγμα μικρό), market making (χρειάζεται order book/ταχύτητα), pairs/stat-arb.
+
+## Έβδομος γύρος: «λέξεις-κλειδιά» / X (Twitter) / κοινωνικά σήματα
+
+**Τι λέει η βιβλιογραφία** (μικτή, κυρίως μεμονωμένες μελέτες): η *ποσότητα* προσοχής (tweet volume, abnormal ticker-tweets) συσχετίζεται με επόμενη μέρα απόδοση/όγκο/μεταβλητότητα πιο αξιόπιστα από το *συναίσθημα*·
+Reddit αδύναμο· ένα PCA index προσοχής (Twitter+Reddit+Google Trends) για τα 10 μεγαλύτερα coins δεν εξήγησε τις αποδόσεις (αντίστροφη σχέση σημαντική: οι τιμές οδηγούν την προσοχή).
+**GitHub agents** με social sentiment (TradingAgents, moon-dev-ai-agents, MAHORAGA, quorumtrading, CryptoFunk, ai-trading-agent): ερευνητικά/πειραματικά, καμία δημοσιευμένη live απόδοση.
+**Τι είναι προσβάσιμο από αυτό το περιβάλλον:** μόνο CoinGecko (trending) και GitHub. Μπλοκαρισμένα: X/Twitter και mirrors, Reddit, Google Trends, Wikipedia pageviews, Mastodon, DefiLlama, alternative.me. Το API του X είναι πληρωμένο.
+⇒ **Δεν γίνεται backtest σήματος από X εδώ.** Ξεκίνησε καταγραφή `engine/attention_log.py` → `results/live/attention.jsonl` (ωριαία snapshot του CoinGecko trending, χωρίς κλειδί/κόστος).
+Προ-δηλωμένο τεστ (μετά από ≥ 14 ημέρες ≈ 2026-11-04, αποτέλεσμα όποιο κι αν είναι): coin που μπαίνει στη λίστα trending → απόδοση σε 1h/4h/24h/5d μείον τον μέσο όρο των coins, και οι δύο κατευθύνσεις, |t| > 3.5.
+Για πραγματικά δεδομένα X: χρειάζεται δική σου απόφαση (πληρωμένο API ή δωρεάν εναλλακτική με άδεια δικτύου) και κλειδί μόνο μέσω secret περιβάλλοντος, όχι στη συνομιλία. Ένας LLM agent που διαβάζει τα tweets δεν θα δοκιμαστεί σε backtest (το μοντέλο ξέρει το παρελθόν): μόνο live.
