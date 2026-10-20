@@ -1,0 +1,255 @@
+{
+ "panel": {
+  "coins": 71,
+  "days": 1499,
+  "from": "2022-09-12"
+ },
+ "A": {
+  "buy&hold equal-weight (reference)": {
+   "sharpe": 0.56,
+   "ann_ret_pct": 38.2,
+   "ann_vol_pct": 68.2,
+   "max_dd_pct": -80.0,
+   "by_year_pct": {
+    "2023": 114.3,
+    "2024": 70.0,
+    "2025": -61.8,
+    "2026": 26.3
+   }
+  },
+  "all coins L=20 long/short": {
+   "sharpe": 0.71,
+   "ann_ret_pct": 22.7,
+   "ann_vol_pct": 32.1,
+   "max_dd_pct": -42.0,
+   "by_year_pct": {
+    "2022": 1.5,
+    "2023": 56.7,
+    "2024": 0.7,
+    "2025": 10.1,
+    "2026": 14.1
+   }
+  },
+  "all coins L=20 long-only": {
+   "sharpe": 0.89,
+   "ann_ret_pct": 21.5,
+   "ann_vol_pct": 24.2,
+   "max_dd_pct": -30.1,
+   "by_year_pct": {
+    "2022": -11.4,
+    "2023": 72.1,
+    "2024": 23.6,
+    "2025": -8.0,
+    "2026": 20.8
+   }
+  },
+  "all coins L=60 long/short": {
+   "sharpe": 0.62,
+   "ann_ret_pct": 19.4,
+   "ann_vol_pct": 31.3,
+   "max_dd_pct": -34.8,
+   "by_year_pct": {
+    "2022": 15.7,
+    "2023": 8.4,
+    "2024": 8.4,
+    "2025": 19.2,
+    "2026": 8.5
+   }
+  },
+  "all coins L=60 long-only": {
+   "sharpe": 0.88,
+   "ann_ret_pct": 20.9,
+   "ann_vol_pct": 23.8,
+   "max_dd_pct": -30.4,
+   "by_year_pct": {
+    "2022": -1.4,
+    "2023": 42.6,
+    "2024": 27.8,
+    "2025": -5.4,
+    "2026": 18.8
+   }
+  },
+  "all coins L=120 long/short": {
+   "sharpe": 0.3,
+   "ann_ret_pct": 9.3,
+   "ann_vol_pct": 30.9,
+   "max_dd_pct": -37.6,
+   "by_year_pct": {
+    "2023": 21.5,
+    "2024": 14.4,
+    "2025": -7.7,
+    "2026": -7.6
+   }
+  },
+  "all coins L=120 long-only": {
+   "sharpe": 0.55,
+   "ann_ret_pct": 12.6,
+   "ann_vol_pct": 23.1,
+   "max_dd_pct": -27.1,
+   "by_year_pct": {
+    "2023": 21.9,
+    "2024": 31.0,
+    "2025": -17.9,
+    "2026": 10.4
+   }
+  },
+  "top-20 liquid L=20 long/short": {
+   "sharpe": 0.63,
+   "ann_ret_pct": 19.8,
+   "ann_vol_pct": 31.6,
+   "max_dd_pct": -40.3,
+   "by_year_pct": {
+    "2022": -1.8,
+    "2023": 42.0,
+    "2024": -6.3,
+    "2025": 21.5,
+    "2026": 13.8
+   }
+  },
+  "top-20 liquid L=20 long-only": {
+   "sharpe": 0.75,
+   "ann_ret_pct": 18.5,
+   "ann_vol_pct": 24.7,
+   "max_dd_pct": -30.2,
+   "by_year_pct": {
+    "2022": -11.0,
+    "2023": 61.8,
+    "2024": 16.3,
+    "2025": -1.7,
+    "2026": 12.4
+   }
+  },
+  "top-20 liquid L=60 long/short": {
+   "sharpe": 0.68,
+   "ann_ret_pct": 21.0,
+   "ann_vol_pct": 30.8,
+   "max_dd_pct": -36.5,
+   "by_year_pct": {
+    "2022": 12.9,
+    "2023": 2.5,
+    "2024": 17.5,
+    "2025": 25.0,
+    "2026": 10.8
+   }
+  },
+  "top-20 liquid L=60 long-only": {
+   "sharpe": 0.77,
+   "ann_ret_pct": 19.9,
+   "ann_vol_pct": 26.0,
+   "max_dd_pct": -33.7,
+   "by_year_pct": {
+    "2022": -2.0,
+    "2023": 35.7,
+    "2024": 29.8,
+    "2025": -1.5,
+    "2026": 11.6
+   }
+  },
+  "top-20 liquid L=120 long/short": {
+   "sharpe": 0.26,
+   "ann_ret_pct": 8.2,
+   "ann_vol_pct": 31.3,
+   "max_dd_pct": -37.8,
+   "by_year_pct": {
+    "2023": 8.6,
+    "2024": 16.5,
+    "2025": -18.1,
+    "2026": 9.2
+   }
+  },
+  "top-20 liquid L=120 long-only": {
+   "sharpe": 0.37,
+   "ann_ret_pct": 9.7,
+   "ann_vol_pct": 26.0,
+   "max_dd_pct": -30.7,
+   "by_year_pct": {
+    "2023": 13.1,
+    "2024": 28.5,
+    "2025": -22.1,
+    "2026": 11.6
+   }
+  }
+ },
+ "B": {
+  "top20 momentum L=20": {
+   "net_bps": 25.7,
+   "ci95": [
+    -59.5,
+    104.5
+   ],
+   "n": 293
+  },
+  "top20 momentum L=60": {
+   "net_bps": 17.2,
+   "ci95": [
+    -66.1,
+    98.0
+   ],
+   "n": 287
+  }
+ },
+ "C": {
+  "plain low-vol L/S": {
+   "sharpe": 0.95,
+   "mean_bps": 66.8,
+   "worst_rebalance_bps": -1646.0,
+   "max_dd_pct_at_half_notional": -39.0,
+   "n_active": 262
+  },
+  "vol-targeted (inverse trailing vol)": {
+   "sharpe": 0.72,
+   "mean_bps": 51.3,
+   "worst_rebalance_bps": -2356.0,
+   "max_dd_pct_at_half_notional": -40.6,
+   "n_active": 262
+  },
+  "only when BTC > 100d SMA": {
+   "sharpe": 0.48,
+   "mean_bps": 25.2,
+   "worst_rebalance_bps": -1646.0,
+   "max_dd_pct_at_half_notional": -36.8,
+   "n_active": 157
+  },
+  "only when BTC < 100d SMA": {
+   "sharpe": 0.88,
+   "mean_bps": 41.6,
+   "worst_rebalance_bps": -1330.0,
+   "max_dd_pct_at_half_notional": -19.8,
+   "n_active": 105
+  }
+ },
+ "D": {
+  "corr_5d": 0.08,
+  "n": 262,
+  "low-vol only": {
+   "sharpe": 0.95,
+   "max_dd_pct": -39.0,
+   "by_year_pct": {
+    "2023": 28.3,
+    "2024": -6.0,
+    "2025": 57.0,
+    "2026": 12.5
+   }
+  },
+  "trend-following only": {
+   "sharpe": 0.63,
+   "max_dd_pct": -33.2,
+   "by_year_pct": {
+    "2023": 16.8,
+    "2024": 21.2,
+    "2025": 1.4,
+    "2026": 18.2
+   }
+  },
+  "50/50 equal-risk combo": {
+   "sharpe": 1.07,
+   "max_dd_pct": -20.1,
+   "by_year_pct": {
+    "2023": 25.2,
+    "2024": 7.5,
+    "2025": 30.9,
+    "2026": 16.8
+   }
+  }
+ }
+}

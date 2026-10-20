@@ -30,3 +30,26 @@ def test_chain_detects_tampering(tmp_path):
     txt = p.read_text().replace('"x": 1', '"x": 9')
     p.write_text(txt)
     assert not X.verify(X.read_book(p))
+
+
+def test_trend_weights_follow_sign_and_scale_inverse_to_vol():
+    rng = np.random.default_rng(0)
+    n = 120
+    idx = pd.date_range("2024-01-01", periods=n, freq="D")
+    up_calm = pd.Series(100 * np.exp(np.cumsum(np.full(n, 0.004) + rng.normal(0, 0.005, n))), index=idx)
+    down_wild = pd.Series(100 * np.exp(np.cumsum(np.full(n, -0.004) + rng.normal(0, 0.05, n))), index=idx)
+    w = X.trend_weights(pd.DataFrame({"UP": up_calm, "DN": down_wild}))
+    assert w["UP"] > 0 > w["DN"]                                   # long the uptrend, short the downtrend
+    assert abs(w["UP"]) > abs(w["DN"])                             # calmer coin gets the larger size (vol targeting)
+    assert abs(w["UP"]) <= X.LEV_CAP / 2 + 1e-9                    # leverage cap, spread over 2 coins
+
+
+def test_trend_book_return_and_cost(tmp_path):
+    p = tmp_path / "t.jsonl"
+    X.append({"type": "open", "id": "d1", "weights": {"A": 0.5, "B": -0.5}, "entry_px": {"A": 100.0, "B": 100.0}}, p)
+    recs = X.read_book(p)
+    prev = recs[0]
+    px = {"A": 102.0, "B": 99.0}
+    gross = sum(w * (px[s] / prev["entry_px"][s] - 1) for s, w in prev["weights"].items())
+    assert abs(gross - 0.015) < 1e-9                               # 0.5*2% + 0.5*1%
+    assert X.trend_summary(recs)["equity"] == X.CAPITAL            # nothing closed yet: equity unchanged

@@ -148,5 +148,73 @@ def daily_closed(inst: str) -> pd.Series:
     return s.sort_index()
 
 
+# ---------------------------------------------------------------------------------------------
+# Sleeve 2: trend following (time-series momentum), the classic CTA sleeve. Research: run_pro_methods.py.
+# Per liquid coin: sign of the TREND_L-day return, sized by target_vol / 20d realised vol (cap 3x),
+# equal weight across coins, rebalanced daily, 5 bps per side on turnover. Low correlation (+0.08) with
+# the low-vol sleeve; the 50/50 combination had a higher Sharpe and half the drawdown in research.
+TREND_BOOK = ROOT / "results" / "live" / "trend_book.jsonl"
+TREND_L = 60
+TARGET_VOL = 0.5
+LEV_CAP = 3.0
+
+
+def trend_weights(closes: pd.DataFrame) -> pd.Series:
+    """closes: closed daily closes (rows = days, cols = coins). Weights for the next day, summing |w|/N-scaled."""
+    ok = closes.notna().sum() >= TREND_L + 25
+    closes = closes.loc[:, ok]
+    sig = np.sign(np.log(closes.iloc[-1] / closes.iloc[-1 - TREND_L]))
+    vol = np.log(closes).diff().tail(20).std() * np.sqrt(365)
+    lev = (TARGET_VOL / vol).clip(upper=LEV_CAP)
+    w = (sig * lev).dropna()
+    return w / max(len(w), 1)
+
+
+def trend_summary(recs: list[dict]) -> dict:
+    closes = [r for r in recs if r["type"] == "close"]
+    eq = CAPITAL
+    for c in closes:
+        eq *= 1 + c["net_bps"] / 1e4
+    return {"days_closed": len(closes), "equity": round(eq, 2), "return_pct": round((eq / CAPITAL - 1) * 100, 3),
+            "mean_net_bps_per_day": round(float(np.mean([c["net_bps"] for c in closes])), 1) if closes else None,
+            "chain_valid": verify(recs)}
+
+
+def run_trend(now: datetime | None = None, path: Path = TREND_BOOK) -> dict:
+    now = now or datetime.now(timezone.utc)
+    ids, last = okx.universe(UNIVERSE_N)
+    px = {i.split("-")[0]: float(p) for i, p in last.items() if i in ids}
+    recs = read_book(path)
+    today = now.date().isoformat()
+    if any(r["type"] == "open" and r["id"] == today for r in recs):
+        return trend_summary(recs)
+    opens = [r for r in recs if r["type"] == "open"]
+    closed_ids = {r["id"] for r in recs if r["type"] == "close"}
+
+    series = {}
+    for inst in ids:
+        try:
+            series[inst.split("-")[0]] = daily_closed(inst)
+        except Exception:
+            continue
+    closes = pd.DataFrame(series).sort_index()
+    closes = closes[closes.index < pd.Timestamp(now.date(), tz="UTC")]
+    if closes.shape[1] < MIN_COINS:
+        return trend_summary(recs)
+    w_new = trend_weights(closes).to_dict()
+
+    prev = opens[-1] if opens and opens[-1]["id"] not in closed_ids else None
+    if prev is not None:                                           # close yesterday's weights at today's price
+        gross = sum(w * (px[s] / prev["entry_px"][s] - 1) for s, w in prev["weights"].items() if s in px and s in prev["entry_px"])
+        turnover = sum(abs(w_new.get(s, 0.0) - prev["weights"].get(s, 0.0)) for s in set(w_new) | set(prev["weights"]))
+        net = gross - FEE_SIDE * turnover
+        append({"type": "close", "id": prev["id"], "closed_at": now.isoformat(), "gross_bps": round(gross * 1e4, 1),
+                "turnover": round(turnover, 3), "net_bps": round(net * 1e4, 1)}, path)
+    append({"type": "open", "id": today, "opened_at": now.isoformat(), "lookback": TREND_L,
+            "weights": {s: round(float(w), 5) for s, w in w_new.items()},
+            "entry_px": {s: px[s] for s in w_new if s in px}, "gross_exposure": round(float(sum(abs(v) for v in w_new.values())), 3)}, path)
+    return trend_summary(read_book(path))
+
+
 if __name__ == "__main__":
-    print(json.dumps(run(), indent=1))
+    print(json.dumps({"lowvol_5d": run(), "trend_60d": run_trend()}, indent=1))
