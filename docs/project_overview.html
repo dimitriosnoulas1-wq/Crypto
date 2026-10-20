@@ -1,0 +1,101 @@
+<!doctype html><html lang="el"><head><meta charset="utf-8"><title>Crypto Intelligence – Τι φτιάξαμε και τι θέλουμε να πετύχουμε</title>
+<style>
+@page{size:A4;margin:18mm 16mm}
+body{font-family:"DejaVu Sans",Arial,sans-serif;font-size:10.3pt;line-height:1.45;color:#1b1f24}
+h1{font-size:20pt;margin:0 0 4px}h2{font-size:13.5pt;margin:20px 0 6px;border-bottom:2px solid #2b5fa5;padding-bottom:3px;color:#1d3f6e;page-break-after:avoid}
+h3{font-size:11pt;margin:12px 0 4px;color:#1d3f6e;page-break-after:avoid}
+.sub{color:#555;margin-bottom:10px}
+table{border-collapse:collapse;width:100%;margin:6px 0 10px;font-size:9.4pt;page-break-inside:avoid}
+th,td{border:1px solid #c5ccd6;padding:4px 6px;text-align:left;vertical-align:top}th{background:#eaf0f8}
+.box{border-left:4px solid #2b5fa5;background:#f3f6fb;padding:6px 10px;margin:8px 0;page-break-inside:avoid}
+.warn{border-left-color:#c0392b;background:#fbf1ef}
+.ok{border-left-color:#2e8b57;background:#eef8f2}
+ul{margin:4px 0 6px 18px;padding:0}li{margin:2px 0}
+code{font-family:"DejaVu Sans Mono",monospace;font-size:8.8pt;background:#eef1f5;padding:0 2px}
+</style></head><body>
+<h1>Crypto Intelligence – προσωπικό σύστημα ανάλυσης αγοράς</h1>
+<div class="sub">Τι φτιάξαμε μέχρι σήμερα, τι θέλουμε να πετύχουμε και πού βρισκόμαστε. Κατάσταση: 20/10/2026. Μόνο paper trading, μόνο για προσωπική χρήση.</div>
+
+<h2>1. Ο στόχος</h2>
+<p>Να χτίσουμε ένα νέο, ανεξάρτητο (όχι τροποποίηση των CryptoCycles / Unbroken) σύστημα πληροφόρησης και πρόβλεψης αγοράς κρυπτονομισμάτων που:</p>
+<ul>
+<li>τρέχει <b>live</b> με παραγματικά δημόσια δεδομένα, χωρίς πραγματικά χρήματα (paper trading),</li>
+<li>χρησιμοποιεί <b>πολλούς «agents» σε συμβούλιο</b> (council) αντί για ένα μοντέλο,</li>
+<li>είναι <b>τίμιο</b>: κάθε ισχυρισμός ακρίβειας αποδεικνύεται με αμετάβλητο ιστορικό προβλέψεων, όχι με backtest που «φαίνεται καλό»,</li>
+<li>βασίζεται σε δωρεάν συστήματα GitHub και δωρεάν APIs,</li>
+<li>εξελίσσεται συνεχώς προς ό,τι πραγματικά δουλεύει, όπως το κάνουν οι επαγγελματίες quant, και απορρίπτει ό,τι δεν δουλεύει.</li>
+</ul>
+<div class="box warn"><b>Για το «99,999%».</b> Ο στόχος αυτός δεν είναι εφικτός σε αγορές τέτοιου τύπου. Οι καλύτερες δημοσιευμένες προσεγγίσεις κινούνται λίγο πάνω από την τύχη (π.χ. 52–57% σε κατεύθυνση), και κάθε υψηλότερο νούμερο που δεν έχει αμετάβλητο live ιστορικό είναι ύποπτο. Αντί γι' αυτό, ο πραγματικός στόχος είναι: <b>μετρήσιμο, αποδεδειγμένο, μικρό πλεονέκτημα μετά από κόστη</b>, με λίγες, σωστές συναλλαγές.</div>
+
+<h2>2. Κανόνες που ισχύουν σε όλο το έργο</h2>
+<ul>
+<li>Καμία πραγματική συναλλαγή, κανένα πραγματικό API key, καμία μόχλευση, καμία πληρωμένη υποδομή.</li>
+<li>Κανένας ισχυρισμός κερδοφορίας ή πλεονεκτήματος από τον πρώτο live κύκλο.</li>
+<li>Δεν παρακάμπτονται γεωγραφικοί περιορισμοί (το Binance επιστρέφει 451 και το Bybit μπλοκάρει από το περιβάλλον μας· χρησιμοποιούμε το OKX).</li>
+<li>Το ledger είναι append-only με αλυσίδα hash: οι προβλέψεις γράφονται <i>πριν</i> το αποτέλεσμα και δεν διορθώνονται ποτέ. Κάθε αποτυχία ακεραιότητας αναφέρεται αμέσως.</li>
+<li>Κλειδιά/κωδικοί δεν δίνονται ποτέ στο chat· μόνο μέσω ρυθμίσεων περιβάλλοντος νέου session.</li>
+</ul>
+
+<h2>3. Τι έχει χτιστεί (αρχιτεκτονική)</h2>
+<table><tr><th>Στοιχείο</th><th>Τι κάνει</th><th>Αρχείο</th></tr>
+<tr><td>Live κύκλος</td><td>Κάθε ώρα: φέρνει δεδομένα OKX για ~60 perps, υπολογίζει χαρακτηριστικά, κάνει προβλέψεις 1ώρας και 4ωρών, επιλύει τις παλιές.</td><td><code>engine/live_cycle.py</code></td></tr>
+<tr><td>Ledger</td><td>SQLite με προβλέψεις και αποτελέσματα, αλυσίδα hash, <code>verify()</code>.</td><td><code>results/live/ledger_okx.sqlite</code></td></tr>
+<tr><td>Συμβούλιο (council)</td><td>Μέλη: base_rate, recent_base_rate_7d, momentum_24, logistic, lgbm_calibrated, analog_k100, derivatives, orthosys. Βάρη με Hedge (ETA=3, παράθυρο 72 ωρών). Απέχει όταν δεν υπάρχει πλεονέκτημα ή τα μέλη διαφωνούν, και έχει veto ρίσκου (ακραία μεταβλητότητα, ελλιπή δεδομένα).</td><td><code>COUNCIL_DESIGN.md</code></td></tr>
+<tr><td>Εικονικά πορτοφόλια</td><td>1000 ανά μοντέλο και ορίζοντα, κόστος 5 bps/πλευρά, και benchmark «long σε όλα τα coins». Τα <b>PRO_</b> πορτοφόλια ανοίγουν συναλλαγές μόνο αν το μοντέλο δείξει t-stat ≥ 2 σε ≥ 48 ώρες.</td><td><code>live_cycle.py</code></td></tr>
+<tr><td>Παρακολούθηση</td><td>Αναφορά με ειδοποιήσεις (π.χ. «χειρότερο από κέρμα»), υγεία δεδομένων, καθυστέρηση κύκλου, βάρη/αποχές συμβουλίου.</td><td><code>results/live/monitor.md</code>, <code>history.jsonl</code></td></tr>
+<tr><td>Cross-sectional paper books</td><td>(α) Low-volatility: long το χαμηλότερο πεμπτημόριο μεταβλητότητας, short το υψηλότερο, κράτημα 5 ημερών, ένα βιβλίο την ημέρα, 40 πιο ρευστά perps. (β) Trend following: πρόσημο 60ήμερης τάσης, μέγεθος με target vol 50%, καθημερινή εναλλαγή.</td><td><code>engine/xs_paper.py</code>, <code>xs_book.jsonl</code>, <code>trend_book.jsonl</code></td></tr>
+<tr><td>Ερευνητικά scripts</td><td>Walk-forward δοκιμές στο αποθηκευμένο ιστορικό, με bootstrap ανά ημέρα και διορθώσεις για πολλαπλές δοκιμές.</td><td><code>run_xs*.py, run_patterns.py, run_pro_methods.py</code></td></tr>
+<tr><td>Log προσοχής</td><td>Καθημερινά στιγμιότυπα CoinGecko trending για μελλοντικό προδηλωμένο τεστ.</td><td><code>engine/attention_log.py</code></td></tr>
+<tr><td>Γράφος γνώσης</td><td>Graphify εγκατεστημένο παγκόσμια για ερωτήσεις πάνω στον κώδικα.</td><td><code>graphify-out/</code> (εκτός git)</td></tr>
+<tr><td>Τεστ</td><td>28 αυτόματα τεστ (causal patterns, ledger/hash, books, attention).</td><td><code>engine/tests/</code></td></tr></table>
+
+<h2>4. Τι βρήκαμε μέχρι τώρα (7 γύροι έρευνας, αναλυτικά στο <code>RESULTS.md</code>)</h2>
+<table><tr><th>Γύρος</th><th>Ερώτηση</th><th>Αποτέλεσμα</th></tr>
+<tr><td>1–2</td><td>Προβλέπουν τα μοντέλα την κατεύθυνση ανά coin;</td><td>Όχι αποδεδειγμένα. Brier skill ≤ 0, τα ML μοντέλα χειρότερα από το baseline. Όσο πιο «σίγουρα», τόσο πιο συχνά λάθος (overfitting). Στο replay: ακρίβεια 52,8% (CI 50,9–54,6%), AUC 0,50.</td></tr>
+<tr><td>Analogs</td><td>«Ιστορικοί κύκλοι»: βρες όμοιες παλιές καταστάσεις.</td><td>Δεν δουλεύει: ακρίβεια 47–55%, Brier skill αρνητικό σε κάθε ορίζοντα.</td></tr>
+<tr><td>LLM agents (TradingAgents κ.ά.)</td><td>Μπορούμε να τα δοκιμάσουμε σε ιστορικό;</td><td>Όχι, γιατί τα LLM «θυμούνται» το παρελθόν (memorization). Κρίνονται μόνο live.</td></tr>
+<tr><td>3</td><td>Skeptic (meta-labeling): φίλτρο που αποφασίζει πότε να εμπιστευτούμε το μοντέλο.</td><td>Δεν έχει συνδεθεί live· χρειάζεται ≥ 72 ώρες scored.</td></tr>
+<tr><td>4</td><td>Σχετική πρόβλεψη (ποια coins θα κάνουν καλύτερα από τα άλλα).</td><td>Το πρώτο στατιστικά ουσιαστικό αποτέλεσμα: <b>low-volatility</b> (ημερήσια, 5–10 ημέρες). IC 0,07–0,11, καθαρό +67 bps/5 ημέρες. Επιφυλάξεις: στα δεδομένα με το 2022 πέφτει σε +38 bps (όχι ασφαλές), μεροληψία επιβίωσης, χωρίς funding/slippage. Ωριαία σήματα δεν πληρώνουν μετά τα κόστη.</td></tr>
+<tr><td>5</td><td>RSI, κεριά, chart patterns.</td><td>Δεν επιβιώνουν (με αιτιακή ανίχνευση pivots, χωρίς look-ahead).</td></tr>
+<tr><td>6</td><td>Τι κάνουν οι επαγγελματίες;</td><td>Trend following (TSMOM) ως διαφοροποιητής: συσχέτιση +0,08 με το low-vol, 50/50 συνδυασμός Sharpe ≈ 1,07 και μέγιστη πτώση ≈ −20%. Το Sharpe έχει τυπικό σφάλμα ±0,5 σε 4 χρόνια, άρα <b>δεν είναι απόδειξη</b>.</td></tr>
+<tr><td>7</td><td>Κοινωνικά σήματα / X / λέξεις-κλειδιά.</td><td>Δεν μπορούν να δοκιμαστούν από εδώ (το X API είναι πληρωμένο). Ξεκίνησε καταγραφή CoinGecko trending για προδηλωμένο τεστ γύρω στις 4/11/2026.</td></tr></table>
+<div class="box"><b>Συμπέρασμα έρευνας.</b> Η απλή πρόβλεψη κατεύθυνσης ανά coin δεν έχει πλεονέκτημα. Το μόνο υποψήφιο που ξεπέρασε τους στατιστικούς ελέγχους είναι <b>σχετική κατάταξη με low-volatility</b>, μαζί με trend following για διαφοροποίηση. Και τα δύο τρέχουν τώρα ως live paper forward test, γιατί αυτό είναι η πραγματική απόδειξη.</div>
+
+<h2>5. Live κατάσταση (20/10/2026, 18:00 UTC)</h2>
+<ul>
+<li>Ledger: 27.240 γραμμές, αλυσίδα hash έγκυρη. Καθυστέρηση πρόβλεψης ≈ 8 λεπτά μετά το κλείσιμο ωριαίου κεριού.</li>
+<li><b>Μόνο 21–26 ώρες έχουν βαθμολογηθεί.</b> Τα coins κινούνται μαζί, άρα το δείγμα ισοδυναμεί με λίγες ανεξάρτητες παρατηρήσεις. Τίποτα δεν είναι ακόμα ερμηνεύσιμο.</li>
+<li>Council: 13 κλήσεις στο h1 (μίλησε σε 13 από 60 περιπτώσεις), 1 στο h4, πορτοφόλι h1 +0,64% από 3 συναλλαγές (δεν είναι απόδειξη).</li>
+<li>logistic h4 +3,9%, lgbm h4 −7,7%, lgbm h1 −4,9%, logistic h1 −4,4%, analog −2,9%, benchmark long-all +0,75% (h1) / +2,86% (h4).</li>
+<li>PRO_ πορτοφόλια: όλα στα 1000, κανένα μοντέλο δεν πέρασε το όριο t ≥ 2.</li>
+<li>Low-vol: το πρώτο βιβλίο είναι ανοιχτό και ωριμάζει στις 25/10. Trend sleeve: άνοιξε την πρώτη θέση, κλείνει την επόμενη ημέρα.</li>
+</ul>
+
+<h2>6. Πώς κρίνουμε την επιτυχία</h2>
+<table><tr><th>Κριτήριο</th><th>Όριο</th></tr>
+<tr><td>Μοντέλο live</td><td>Brier skill &gt; 0 με διάστημα εμπιστοσύνης που δεν περιέχει 0, σε αρκετές ανεξάρτητες ώρες/ημέρες, και θετικό καθαρό P&amp;L μετά από 5 bps/πλευρά.</td></tr>
+<tr><td>Cross-sectional books</td><td>Καθαρό μέσο κέρδος &gt; 0 σε αρκετά ώριμα βιβλία (δεκάδες), σε συμφωνία με το backtest, χωρίς να χειροτερεύει σε διαφορετικό καθεστώς αγοράς.</td></tr>
+<tr><td>Πολλαπλές δοκιμές</td><td>Για κάθε νέο σήμα που δοκιμάζεται απαιτείται |t| &gt; 3,5, και τα τεστ προδηλώνονται πριν δούμε τα δεδομένα.</td></tr>
+<tr><td>Ακεραιότητα</td><td>Η αλυσίδα hash των ledger/books παραμένει έγκυρη. Αλλιώς σταματάμε και αναφέρουμε.</td></tr></table>
+
+<h2>7. Γνωστοί περιορισμοί</h2>
+<ul>
+<li>Hugging Face (Chronos/Kronos) μπλοκαρισμένο· τα αφαιρέσαμε από το σχέδιο και δεν ξαναδοκιμάζονται.</li>
+<li>X/Twitter δεδομένα: το επίσημο API είναι πληρωμένο· χρειάζεται δική σου απόφαση και κλειδί μέσω ρυθμίσεων περιβάλλοντος. Εναλλακτικά, εσύ ρωτάς το Grok bot και μου δίνεις τις απαντήσεις για live καταγραφή (δεν μπορεί να γίνει ιστορικό backtest).</li>
+<li>Δεν υπάρχει GEMINI_API_KEY, άρα δεν υπάρχει LLM agent για ειδήσεις/sentiment.</li>
+<li>Το agent «derivatives» είναι ≈ base rate· το funding έχει μόλις ~3 μήνες ιστορικό από το OKX.</li>
+<li>Έρευνα cross-sectional: μεροληψία επιβίωσης, χωρίς μοντελοποίηση funding, ολίσθησης και short squeezes.</li>
+</ul>
+
+<h2>8. Χρονοδιάγραμμα και επόμενα βήματα</h2>
+<table><tr><th>Πότε</th><th>Τι</th></tr>
+<tr><td>Κάθε ώρα</td><td>Αυτόματος κύκλος (live_cycle, xs_paper, attention_log), commit/push στο branch <code>ccr-1a26596e-qq0vr6</code>.</td></tr>
+<tr><td>Κάθε 6 ώρες</td><td>Σύντομη ενημέρωση στα ελληνικά με τα πορτοφόλια και το μέγεθος του δείγματος.</td></tr>
+<tr><td>25/10/2026</td><td>Ωριμάζει το πρώτο low-vol βιβλίο· πρώτη πραγματική μέτρηση.</td></tr>
+<tr><td>22/10/2026 17:00 UTC</td><td>Τέλος της αυτόματης παρακολούθησης: τελική περίληψη, απενεργοποίηση του trigger. Το <code>xs_paper.py</code> πρέπει μετά να τρέχει χειροκίνητα ή με νέο trigger.</td></tr>
+<tr><td>~04/11/2026</td><td>Προδηλωμένο τεστ γεγονότων προσοχής (CoinGecko trending), με ≥ 14 ημέρες δεδομένων.</td></tr>
+<tr><td>Έρευνα σε εξέλιξη</td><td>Funding ως φίλτρο/κόστος στα δύο sleeves, εβδομαδιαία εναλλαγή για λιγότερα κόστη, αντιστάθμιση beta με BTC, σύνδεση του Skeptic όταν υπάρχουν ≥ 72 scored ώρες.</td></tr>
+<tr><td>Προαιρετικά (αποφασίζεις εσύ)</td><td>Grok/X σήματα, κλειδί Gemini για LLM agent ειδήσεων.</td></tr></table>
+
+<div class="box ok"><b>Σε μία πρόταση:</b> φτιάξαμε ένα τίμιο εργαστήριο που δοκιμάζει ιδέες live, κρατά αμετάβλητο ιστορικό, και σταδιακά κρατά μόνο ό,τι αποδεικνύεται, με ήδη ένα υποψήφιο (low-volatility + trend) που περιμένουμε να επιβεβαιωθεί ή να καταρριφθεί στα live δεδομένα.</div>
+</body></html>
