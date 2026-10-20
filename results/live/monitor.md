@@ -1,54 +1,23 @@
-# Live monitor (2026-10-20T10:07:45.426968+00:00)
+# Live monitor (2026-10-20T10:19:31.041770+00:00)
 
 ## Alerts
 
-- MODEL COLLAPSED: p_spread_lgbm_calibrated_h1 = 0.0015 (same probability for every coin)
+- none
 
 ## Health
 
 - **venue**: okx
-- **symbols**: 61
+- **symbols**: 60
 - **universe_size**: 60
-- **fetched_only_for_scoring**: ['STX']
+- **fetched_only_for_scoring**: []
 - **last_closed_bar**: 2026-10-20 09:00:00+00:00
-- **minutes_since_bar_close_at_fetch**: 5.7
+- **minutes_since_bar_close_at_fetch**: 17.8
 - **stale_symbols**: []
-- **fetch_log**: ['fetch_seconds 102.3 instruments 61/61']
+- **fetch_log**: ['fetch_seconds 100.9 instruments 60/60']
 - **feature_nan_share_latest_bar**: 0.026
-- **council_weights_h1**: {'base_rate': 0.121, 'recent_base_rate_7d': 0.117, 'momentum_24': 0.136, 'logistic': 0.132, 'lgbm_calibrated': 0.134, 'analog_k100': 0.114, 'derivatives': 0.124, 'orthosys': 0.122}
-- **council_member_logloss_h1**: {'base_rate': 0.6933, 'recent_base_rate_7d': 0.694, 'momentum_24': 0.6909, 'logistic': 0.6916, 'lgbm_calibrated': 0.6913, 'analog_k100': 0.6956, 'derivatives': 0.6934, 'orthosys': 0.693}
-- **council_calls_h1**: 7
-- **council_abstain_h1**: {'no_edge': 48, 'spoke': 7, 'extreme_volatility': 5}
-- **council_weights_h4**: {'base_rate': 0.136, 'recent_base_rate_7d': 0.065, 'momentum_24': 0.136, 'logistic': 0.149, 'lgbm_calibrated': 0.118, 'analog_k100': 0.125, 'derivatives': 0.134, 'orthosys': 0.137}
-- **council_member_logloss_h4**: {'base_rate': 0.6933, 'recent_base_rate_7d': 0.7122, 'momentum_24': 0.6932, 'logistic': 0.6911, 'lgbm_calibrated': 0.6967, 'analog_k100': 0.6958, 'derivatives': 0.6934, 'orthosys': 0.6931}
-- **council_calls_h4**: 0
-- **council_abstain_h4**: {'no_edge': 38, 'members_disagree': 17, 'extreme_volatility': 5}
-- **prediction_latency_min**: 7.6
-- **price_snapshot_age_s**: 0.6
-- **train_rows_h1**: 88835
-- **orthosys_hist_hit_h1**: 0.5278
-- **p_spread_base_rate_h1**: 0.0
-- **p_spread_recent_base_rate_7d_h1**: 0.0
-- **p_spread_momentum_24_h1**: 0.011
-- **p_spread_logistic_h1**: 0.0173
-- **p_spread_lgbm_calibrated_h1**: 0.0015
-- **p_spread_analog_k100_h1**: 0.0579
-- **p_spread_derivatives_h1**: 0.0015
-- **p_spread_orthosys_h1**: 0.0061
-- **p_spread_council_h1**: 0.0074
-- **train_rows_h4**: 88652
-- **orthosys_hist_hit_h4**: 0.5195
-- **p_spread_base_rate_h4**: 0.0
-- **p_spread_recent_base_rate_7d_h4**: 0.0
-- **p_spread_momentum_24_h4**: 0.0009
-- **p_spread_logistic_h4**: 0.0218
-- **p_spread_lgbm_calibrated_h4**: 0.0059
-- **p_spread_analog_k100_h4**: 0.0835
-- **p_spread_derivatives_h4**: 0.0049
-- **p_spread_orthosys_h4**: 0.0043
-- **p_spread_council_h4**: 0.0
-- **predictions_written**: 1080
-- **resolved_this_cycle**: 1080
+- **note**: bar already predicted; only resolving
+- **predictions_written**: 0
+- **resolved_this_cycle**: 0
 - **ledger_chain_valid**: True
 - **ledger_rows**: 18600
 
@@ -126,6 +95,24 @@ Brier skill vs base rate = improvement over the naive base-rate model on the sam
 | recent_base_rate_7d|h4 | 992.37 | -0.76% | 840 | 381 | 14 |
 | benchmark_long_all_coins|h1 | 989.82 | -1.02% | 1080 | 456 | 18 |
 | benchmark_long_all_coins|h4 | 999.29 | -0.07% | 900 | 395 | 15 |
+| PRO_analog_k100|h1 | 1000.00 | +0.00% | 0 | 0 | 13 |
+| PRO_analog_k100|h4 | 1000.00 | +0.00% | 0 | 0 | 10 |
+| PRO_base_rate|h1 | 1000.00 | +0.00% | 0 | 0 | 18 |
+| PRO_base_rate|h4 | 1000.00 | +0.00% | 0 | 0 | 15 |
+| PRO_council|h1 | 1000.00 | +0.00% | 0 | 0 | 13 |
+| PRO_council|h4 | 1000.00 | +0.00% | 0 | 0 | 10 |
+| PRO_derivatives|h1 | 1000.00 | +0.00% | 0 | 0 | 13 |
+| PRO_derivatives|h4 | 1000.00 | +0.00% | 0 | 0 | 10 |
+| PRO_lgbm_calibrated|h1 | 1000.00 | +0.00% | 0 | 0 | 18 |
+| PRO_lgbm_calibrated|h4 | 1000.00 | +0.00% | 0 | 0 | 15 |
+| PRO_logistic|h1 | 1000.00 | +0.00% | 0 | 0 | 18 |
+| PRO_logistic|h4 | 1000.00 | +0.00% | 0 | 0 | 15 |
+| PRO_momentum_24|h1 | 1000.00 | +0.00% | 0 | 0 | 18 |
+| PRO_momentum_24|h4 | 1000.00 | +0.00% | 0 | 0 | 15 |
+| PRO_orthosys|h1 | 1000.00 | +0.00% | 0 | 0 | 18 |
+| PRO_orthosys|h4 | 1000.00 | +0.00% | 0 | 0 | 15 |
+| PRO_recent_base_rate_7d|h1 | 1000.00 | +0.00% | 0 | 0 | 17 |
+| PRO_recent_base_rate_7d|h4 | 1000.00 | +0.00% | 0 | 0 | 14 |
 
 ## Unverified (pending, not scored)
 

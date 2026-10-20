@@ -222,6 +222,7 @@ def pro_wallets(tr: pd.DataFrame) -> dict:
     if tr.empty:
         return out
     t = tr.copy()
+    t["asof"] = pd.to_datetime(t["asof"], utc=True)
     t["side"] = np.where(t.p_up >= CONF, 1, np.where(t.p_up <= 1 - CONF, -1, 0))
     t["ret"] = t.side * (t.exit_px / t.live_price - 1) - (t.side != 0) * 2 * FEE_BPS / 1e4
     for (model, h), g in t.groupby(["model_name", "horizon_days"]):
