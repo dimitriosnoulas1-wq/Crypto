@@ -207,6 +207,44 @@ def wallets(tr: pd.DataFrame) -> dict:
     return out
 
 
+LICENSE_MIN_BARS = 48        # scored bars a model needs before it may trade
+LICENSE_T = 2.0              # its past per-bar net return must have t-stat >= this
+
+
+def pro_wallets(tr: pd.DataFrame) -> dict:
+    """"Professional" paper wallets: same trades as `wallets`, but a model may only trade at bar t
+    if its OWN realised record up to t is statistically positive after fees (>= LICENSE_MIN_BARS
+    matured bars, t-stat of the mean per-bar net return >= LICENSE_T). Unproven models stay flat,
+    so these wallets trade rarely and only on live evidence, never on backtest hope.
+    Only outcomes matured before the bar (asof + h hours <= t) are used: no look-ahead.
+    """
+    out = {}
+    if tr.empty:
+        return out
+    t = tr.copy()
+    t["side"] = np.where(t.p_up >= CONF, 1, np.where(t.p_up <= 1 - CONF, -1, 0))
+    t["ret"] = t.side * (t.exit_px / t.live_price - 1) - (t.side != 0) * 2 * FEE_BPS / 1e4
+    for (model, h), g in t.groupby(["model_name", "horizon_days"]):
+        bars = g.groupby("asof").apply(lambda b: pd.Series({"n": int((b.side != 0).sum()),
+                                       "r": b.loc[b.side != 0, "ret"].mean()}), include_groups=False)
+        bars = bars.sort_index()
+        cap, n_tr, wins, licensed_bars = START_CAPITAL, 0, 0, 0
+        for asof, b in g.sort_values("asof").groupby("asof"):
+            known = bars[(bars.index + pd.Timedelta(hours=int(h)) <= asof) & (bars.n > 0)].r.dropna()
+            ok = len(known) >= LICENSE_MIN_BARS and known.std() > 0 and \
+                known.mean() / (known.std() / np.sqrt(len(known))) >= LICENSE_T
+            act = b[b.side != 0]
+            if ok and len(act):
+                cap *= 1 + act.ret.mean() / h
+                n_tr += len(act)
+                wins += int((act.ret > 0).sum())
+                licensed_bars += 1
+        out[f"PRO_{model}|h{h}"] = {"value": round(float(cap), 2), "return_pct": round(float(cap / START_CAPITAL - 1) * 100, 2),
+                                    "trades": n_tr, "wins": wins, "scored_bars": int(g["asof"].nunique()),
+                                    "licensed_bars": licensed_bars}
+    return out
+
+
 def monitor(tr: pd.DataFrame, pending: pd.DataFrame, health: dict) -> dict:
     """Realized results only. `tr`: resolved predictions; `pending`: not yet matured (never scored).
 
@@ -439,7 +477,7 @@ def main():
         lat = [m.get("latency_min", d) for m, d in zip(meta, derived)]
         tr["late"] = [la > 0.25 * h * BAR.total_seconds() / 60 for la, h in zip(lat, tr.horizon_days)]
     rep = monitor(tr, pending, health)
-    rep["wallets"] = wallets(tr)
+    rep["wallets"] = {**wallets(tr), **pro_wallets(tr)}
     rep["alerts"] = alerts(rep)
     # One history line per cycle that changed the ledger; reruns that add nothing are not recorded twice.
     if written or resolved:

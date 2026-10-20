@@ -78,3 +78,23 @@ def test_wallet_accounting():
     fee = 2 * FEE_BPS / 1e4
     assert w["trades"] == 2 and w["wins"] == 2                     # bar b2: p=0.5 -> no position
     assert w["value"] == pytest.approx(1000 * (1 + (0.10 - fee)), abs=0.01)   # long +10%, short +10%
+
+
+def test_pro_wallet_needs_live_evidence():
+    import numpy as np
+    import pandas as pd
+    import live_cycle as L
+    rng = np.random.default_rng(0)
+    rows = []
+    for i in range(120):
+        asof = pd.Timestamp("2026-10-19", tz="UTC") + pd.Timedelta(hours=i)
+        for c in range(20):
+            up = rng.random() < 0.5
+            for name, p in (("oracle", 0.7 if up else 0.3), ("coin", 0.7 if rng.random() < 0.5 else 0.3)):
+                rows.append(dict(asof=asof, model_name=name, horizon_days=1, symbol=str(c), p_up=p,
+                                 live_price=100.0, exit_px=100.5 if up else 99.5, up=up))
+    w = L.pro_wallets(pd.DataFrame(rows))
+    assert w["PRO_oracle|h1"]["trades"] > 0 and w["PRO_oracle|h1"]["value"] > 1000
+    first = w["PRO_oracle|h1"]["scored_bars"] - w["PRO_oracle|h1"]["licensed_bars"]
+    assert first >= L.LICENSE_MIN_BARS            # never trades before it has a record
+    assert w["PRO_coin|h1"]["value"] <= 1000.0 + 1e-9 or w["PRO_coin|h1"]["trades"] < w["PRO_oracle|h1"]["trades"]
